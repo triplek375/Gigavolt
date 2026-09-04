@@ -1,6 +1,6 @@
 CREATE DATABASE IF NOT EXISTS app_db;
-CREATE USER IF NOT EXISTS 'app_user'@'localhost' IDENTIFIED BY 'StrongPassword123!';
-GRANT ALL PRIVILEGES ON app_db.* TO 'app_user'@'localhost';
+# CREATE USER IF NOT EXISTS 'app_user'@'localhost' IDENTIFIED BY 'StrongPassword123!';
+# GRANT ALL PRIVILEGES ON app_db.* TO 'app_user'@'localhost';
 # FLUSH PRIVILEGES;
 
 USE app_db;
