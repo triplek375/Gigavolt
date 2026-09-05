@@ -8,7 +8,6 @@ USE gigavolt_db;
 # =====================================================================
 # DEFINE BRONZE TABLES
 # =====================================================================
-DROP TABLE IF EXISTS bronze_customers;
 CREATE TABLE bronze_customers (
     customer_id TEXT,
     company_name TEXT,
@@ -24,7 +23,6 @@ CREATE TABLE bronze_customers (
     status TEXT
 );
 
-DROP TABLE IF EXISTS bronze_dispatches;
 CREATE TABLE bronze_dispatches (
     dispatch_id TEXT,
     equipment_id TEXT,
@@ -38,7 +36,6 @@ CREATE TABLE bronze_dispatches (
     status TEXT
 );
 
-DROP TABLE IF EXISTS bronze_equipment;
 CREATE TABLE bronze_equipment (
     equipment_id TEXT,
     customer_id TEXT,
@@ -52,7 +49,6 @@ CREATE TABLE bronze_equipment (
     location_notes TEXT
 );
 
-DROP TABLE IF EXISTS bronze_parts;
 CREATE TABLE bronze_parts (
     part_id TEXT,
     part_name TEXT,
@@ -65,7 +61,6 @@ CREATE TABLE bronze_parts (
     reorder_level TEXT
 );
 
-DROP TABLE IF EXISTS bronze_warranty_claims;
 CREATE TABLE bronze_warranty_claims (
     claim_id TEXT,
     equipment_id TEXT,
