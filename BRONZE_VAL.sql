@@ -1,6 +1,7 @@
 # =====================================================================
 # VALIDATE DATA IMPORTED IN BRONZE TABLES
 # =====================================================================
+USE gigavolt_db;
 
 SELECT 'bronze_customers' AS table_name, COUNT(*) AS row_count FROM bronze_customers
 UNION ALL

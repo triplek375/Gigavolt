@@ -1,6 +1,7 @@
 # =====================================================================
 # IMPORT DATA INTO BRONZE TABLES
 # =====================================================================
+USE gigavolt_db;
 
 LOAD DATA INFILE '/opt/data/customers.csv'
 INTO TABLE bronze_customers
