@@ -1,0 +1,97 @@
+#!/bin/bash
+
+# =======================================================================
+# AWS EC2 User Data Script - Ubuntu
+# Description: Automated unattended setup for MariaDB 12.3 with logging
+# =======================================================================
+
+# Log all output (stdout & stderr) to a custom logfile
+LOGFILE="/var/log/user-data.log"
+exec > >(tee -a "${LOGFILE}") 2>&1
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting User Data initialization..."
+echo "==================================================================="
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Configuring non-interactive mode"
+echo "==================================================================="
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Updating list of available packages"
+echo "==================================================================="
+apt-get update -y
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Upgrading all installed packages"
+echo "==================================================================="
+apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing prerequisites utilities for repository setup"
+echo "==================================================================="
+apt-get install -y apt-transport-https curl unzip
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Adding MariaDB community repository..."
+echo "==================================================================="
+curl -o /etc/apt/keyrings/mariadb-keyring.asc 'https://mariadb.org/mariadb_release_signing_key.pgp'
+
+cat << EOL > /etc/apt/sources.list.d/mariadb.sources
+# MariaDB 12.3 repository list - created 2026-08-31 12:12 UTC
+# https://mariadb.org/download/
+X-Repolib-Name: MariaDB
+Types: deb
+# deb.mariadb.org is a dynamic mirror if your preferred mirror goes offline. See https://mariadb.org/mirrorbits/ for details.
+# URIs: https://deb.mariadb.org/12.3/ubuntu
+URIs: https://mirrors.accretive-networks.net/mariadb/repo/12.3/ubuntu
+Suites: resolute
+Components: main main/debug
+Signed-By: /etc/apt/keyrings/mariadb-keyring.asc
+EOL
+# Refresh package lists to include the newly added repository
+apt-get update -y
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing MariaDB server..."
+echo "==================================================================="
+apt-get install -y mariadb-server
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] MariaDB installation complete!"
+echo "Service Status: $(systemctl is-active mariadb)"
+echo "==================================================================="
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Downloading data files from 622.gomillion.org"
+echo "==================================================================="
+mkdir -p /opt/data
+cd /opt/data
+wget -q --show-progress "https://622.gomillion.org/data/fall2026.zip" -O data.zip
+unzip data.zip
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Downloading SQL scripts from github"
+echo "==================================================================="
+mkdir -p /opt/sql
+cd /opt/sql
+wget -q --show-progress "https://github.com/triplek375/Gigavolt/archive/refs/heads/main.zip" -O Gigavolt.zip
+unzip -j Gigavolt.zip
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Bronze Scripts with validation"
+echo "==================================================================="
+
+mariadb < /opt/sql/BRONZE_DDL.sql
+mariadb < /opt/sql/BRONZE_DML.sql
+mariadb < /opt/sql/BRONZE_VAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Silver Scripts with validation"
+echo "==================================================================="
+
+mariadb < /opt/sql/SILVER_DDL.sql
+mariadb < /opt/sql/SILVER_DML.sql
+mariadb < /opt/sql/SILVER_VAL.sql

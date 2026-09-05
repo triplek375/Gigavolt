@@ -5,7 +5,7 @@ USE gigavolt_db;
 
 CREATE TABLE companies (
     company_id INT AUTO_INCREMENT PRIMARY KEY,
-    company_name VARCHAR(50) NOT NULL UNIQUE,
+    company_name VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE countries (
