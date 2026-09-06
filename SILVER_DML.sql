@@ -142,7 +142,7 @@ INSERT INTO equipment (
     location_notes
 )
 SELECT DISTINCT
-    CAST(b.equipment_id AS CHAR) AS equipment_id,
+    CAST(b.equipment_id AS VARCHAR(50)) AS equipment_id,
     b.customer_id,
     m.model_id,
     COALESCE(NULLIF(TRIM(b.serial_number), ''), 'UNKNOWN') AS serial_number,
