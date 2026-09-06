@@ -2,8 +2,6 @@ import pandas as pd
 import re
 from sqlalchemy import create_engine
 
-# Initialize database connection
-# Assuming local root access with no password based on your init_script.txt setup
 engine = create_engine('mysql+pymysql://root@localhost/gigavolt_db')
 
 def clean_html(text):
@@ -16,7 +14,6 @@ def extract_numbers(text):
 
 def standardize_date(date_str):
     if pd.isna(date_str): return None
-    # Let pandas handle the heavy lifting of multiple date formats
     try:
         return pd.to_datetime(date_str, format='mixed').date()
     except:
