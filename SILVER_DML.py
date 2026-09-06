@@ -43,7 +43,7 @@ companies.to_sql('companies', engine, if_exists='append', index=False)
 db_companies = pd.read_sql("SELECT * FROM companies", engine)
 
 # Countries
-df_b['country_clean'] = df_b['country'].replace(
+df_b['country_clean'] = df_b['country'].str.strip().replace(
     {None: 'United States', '': 'United States', 'US': 'United States', 'USA': 'United States'}
 )
 countries = pd.DataFrame({'country_name': df_b['country_clean'].dropna().unique()})
@@ -119,6 +119,7 @@ db_status = pd.read_sql("SELECT * FROM equipmentStatus", engine)
 # Dates
 df_b['install_date_clean'] = df_b['install_date'].apply(standardize_date)
 df_b['warranty_exp_clean'] = df_b['warranty_expiration'].apply(standardize_date)
+df_b['location_notes'] = df_b['location_notes'].apply(clean_html)
 
 # Assemble Main
 final_eq = df_b.merge(db_models, left_on=['model', 'capacity_kw_num', 'voltage_num'], right_on=['model_name', 'capacity_kw', 'voltage'], how='left')
@@ -140,11 +141,13 @@ df_b = pd.read_sql("SELECT * FROM bronze_dispatches", engine)
 
 # Technicians
 techs = df_b['technician'].dropna().apply(lambda x: re.sub(r'\s+', ' ', str(x)).strip())
+techs = techs[techs != '']
 tech_df = pd.DataFrame({
     'first_name': techs.apply(lambda x: x.split(' ')[0]),
     'last_name': techs.apply(lambda x: ' '.join(x.split(' ')[1:]) if len(x.split(' ')) > 1 else 'Unknown')
 }).drop_duplicates()
-tech_df.loc[len(tech_df)] = ['Unknown', 'Unknown'] # Fallback
+if not ((tech_df['first_name'] == 'Unknown') & (tech_df['last_name'] == 'Unknown')).any():
+    tech_df.loc[len(tech_df)] = ['Unknown', 'Unknown']
 tech_df.drop_duplicates().to_sql('technicians', engine, if_exists='append', index=False)
 db_techs = pd.read_sql("SELECT * FROM technicians", engine)
 db_techs['full_name'] = db_techs['first_name'] + ' ' + db_techs['last_name'].replace('Unknown', '').str.strip()
@@ -162,6 +165,7 @@ db_status = pd.read_sql("SELECT * FROM dispatchStatus", engine)
 df_b['tech_clean'] = df_b['technician'].apply(lambda x: re.sub(r'\s+', ' ', str(x)).strip() if pd.notna(x) else 'Unknown Unknown')
 df_b['dispatch_date_clean'] = df_b['dispatch_date'].apply(standardize_date)
 df_b['labor_cost_clean'] = pd.to_numeric(df_b['labor_cost'].apply(extract_numbers), errors='coerce') / 100 # Adjust if decimals removed
+df_b['resolution_summary'] = df_b['resolution_summary'].apply(clean_html)
 
 final_disp = df_b.merge(db_techs, left_on='tech_clean', right_on='full_name', how='left')
 final_disp = final_disp.merge(db_services, left_on='service_type', right_on='service_type_name', how='left')
@@ -211,6 +215,7 @@ final_parts[['part_id', 'part_name', 'category_id', 'manufacturer_id', 'supplier
 print("Processing Claims...")
 # CLAIMS
 df_claims = pd.read_sql("SELECT * FROM bronze_warranty_claims", engine)
+df_claims['denial_reason'] = df_claims['denial_reason'].apply(clean_html)
 df_claims['status_clean'] = df_claims['status'].str.strip().str.title()
 pd.DataFrame({'status_name': df_claims['status_clean'].dropna().unique()}).to_sql('claimStatus', engine, if_exists='append', index=False)
 db_c_status = pd.read_sql("SELECT * FROM claimStatus", engine)
