@@ -68,6 +68,7 @@ db_cities = pd.read_sql("SELECT * FROM cities", engine)
 df_b['zip_clean'] = df_b['zip'].apply(lambda x: str(x).zfill(5) if pd.notna(x) else None)
 loc_m = df_b[['zip_clean', 'city_clean', 'state_clean']].drop_duplicates().dropna()
 loc_m = loc_m.merge(cities_m, on=['city_clean', 'state_clean'])
+loc_m = loc_m.merge(db_cities, left_on=['city_clean', 'state_id'], right_on=['city_name', 'state_id'])
 loc_m[['zip_clean', 'city_id']].rename(columns={'zip_clean': 'zip'}).to_sql('locations', engine, if_exists='append', index=False)
 db_locations = pd.read_sql("SELECT * FROM locations", engine)
 
