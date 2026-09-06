@@ -25,7 +25,7 @@ print("Processing Customers...")
 df_b = pd.read_sql("SELECT * FROM bronze_customers", engine)
 
 # 1. Clean Data
-df_b['company_name_clean'] = df_b['company_name'].apply(clean_html)
+df_b['company_name_clean'] = df_b['company_name'].apply(clean_html).str.strip().str.title()
 df_b['address_clean'] = df_b['address'].apply(clean_html)
 df_b['phone_clean'] = df_b['phone'].apply(extract_numbers)
 df_b['email_clean'] = df_b['email'].str.lower().str.strip()
