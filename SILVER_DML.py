@@ -80,7 +80,9 @@ db_statuses = pd.read_sql("SELECT * FROM customerStatus", engine)
 
 # 3. Assemble and Insert Main Customers Table
 final_df = df_b.merge(db_companies, left_on='company_name_clean', right_on='company_name', how='left')
-final_df = final_df.merge(db_locations, left_on='zip_clean', right_on='zip', how='left')
+final_df = final_df.merge(db_states, left_on='state_clean', right_on='state_name', how='left')
+final_df = final_df.merge(db_cities, left_on=['city_clean', 'state_id'], right_on=['city_name', 'state_id'], how='left')
+final_df = final_df.merge(db_locations, left_on=['zip_clean', 'city_id'], right_on=['zip', 'city_id'], how='left')
 final_df = final_df.merge(db_statuses, left_on='status_clean', right_on='status_name', how='left')
 
 silver_customers = final_df[[
@@ -88,8 +90,8 @@ silver_customers = final_df[[
     'email_clean', 'address_clean', 'location_id', 'created_date_clean', 'status_id'
 ]].rename(columns={'phone_clean': 'phone', 'email_clean': 'email', 'address_clean': 'address', 'created_date_clean': 'created_date'})
 
+silver_customers = silver_customers.drop_duplicates(subset=['customer_id'])
 silver_customers.to_sql('customers', engine, if_exists='append', index=False)
-
 
 
 print("Processing Equipment...")
