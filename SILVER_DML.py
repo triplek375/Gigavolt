@@ -73,7 +73,7 @@ loc_m[['zip_clean', 'city_id']].rename(columns={'zip_clean': 'zip'}).to_sql('loc
 db_locations = pd.read_sql("SELECT * FROM locations", engine)
 
 # Customer Status
-df_b['status_clean'] = df_b['status'].str.strip()
+df_b['status_clean'] = df_b['status'].str.strip().str.title()
 statuses = pd.DataFrame({'status_name': df_b['status_clean'].dropna().unique()})
 statuses.to_sql('customerStatus', engine, if_exists='append', index=False)
 db_statuses = pd.read_sql("SELECT * FROM customerStatus", engine)
