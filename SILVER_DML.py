@@ -2,7 +2,7 @@ import pandas as pd
 import re
 from sqlalchemy import create_engine
 
-engine = create_engine('mysql+pymysql://root@localhost/gigavolt_db')
+engine = create_engine('mysql+pymysql://root@/gigavolt_db?unix_socket=/run/mysqld/mysqld.sock')
 
 def clean_html(text):
     if pd.isna(text): return None
