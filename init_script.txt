@@ -32,7 +32,7 @@ apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--fo
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing prerequisites utilities for repository setup"
 echo "==================================================================="
-apt-get install -y apt-transport-https curl unzip
+apt-get install -y apt-transport-https curl unzip python3-pandas python3-sqlalchemy python3-pymysql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Adding MariaDB community repository..."
@@ -75,8 +75,8 @@ unzip data.zip
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Downloading SQL scripts from github"
 echo "==================================================================="
-mkdir -p /opt/sql
-cd /opt/sql
+mkdir -p /opt/scripts
+cd /opt/scripts
 wget -q --show-progress "https://github.com/triplek375/Gigavolt/archive/refs/heads/main.zip" -O Gigavolt.zip
 unzip -j Gigavolt.zip
 
@@ -84,14 +84,14 @@ echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Bronze Scripts with validation"
 echo "==================================================================="
 
-mariadb < /opt/sql/BRONZE_DDL.sql
-mariadb < /opt/sql/BRONZE_DML.sql
-mariadb < /opt/sql/BRONZE_VAL.sql
+mariadb < /opt/scripts/BRONZE_DDL.sql
+mariadb < /opt/scripts/BRONZE_DML.sql
+mariadb < /opt/scripts/BRONZE_VAL.sql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Silver Scripts with validation"
 echo "==================================================================="
 
-mariadb < /opt/sql/SILVER_DDL.sql
-mariadb < /opt/sql/SILVER_DML.sql
-mariadb < /opt/sql/SILVER_VAL.sql
+mariadb < /opt/scripts/SILVER_DDL.sql
+python3 /opt/scripts/silver_etl.py
+mariadb < /opt/scripts/SILVER_VAL.sql
