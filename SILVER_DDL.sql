@@ -15,7 +15,7 @@ CREATE TABLE countries (
 
 CREATE TABLE states (
     state_id INT AUTO_INCREMENT PRIMARY KEY,
-    state_name VARCHAR(50) NOT NULL,
+    state_name CHAR(2) NOT NULL,
     country_id INT NOT NULL,
     FOREIGN KEY (country_id) REFERENCES countries(country_id)
 );
@@ -57,6 +57,7 @@ CREATE TABLE customers (
 
 CREATE TABLE equipmentModels (
     model_id INT AUTO_INCREMENT PRIMARY KEY,
+    model_name VARCHAR(50) NOT NULL UNIQUE,
     capacity_kw DECIMAL(10,2),
     voltage DECIMAL(10,2)
 );
@@ -67,7 +68,7 @@ CREATE TABLE equipmentStatus (
 );
 
 CREATE TABLE equipment (
-    equipment_id VARCHAR(50) PRIMARY KEY,
+    equipment_id VARCHAR(50) NOT NULL,
     customer_id VARCHAR(50) NOT NULL,
     model_id INT NOT NULL,
     serial_number VARCHAR(50) NOT NULL,
@@ -75,6 +76,7 @@ CREATE TABLE equipment (
     warranty_expiration DATE,
     status_id INT NOT NULL,
     location_notes TEXT,
+    PRIMARY KEY (equipment_id, status_id),
     FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
     FOREIGN KEY (model_id) REFERENCES equipmentModels(model_id),
     FOREIGN KEY (status_id) REFERENCES equipmentStatus(status_id)
@@ -147,7 +149,7 @@ CREATE TABLE claimStatus (
     status_name VARCHAR(50) NOT NULL UNIQUE
 );
 
-CREATE TABLE warranty_claims (
+CREATE TABLE warrantyClaims (
     claim_id VARCHAR(50) PRIMARY KEY,
     equipment_id VARCHAR(50) NOT NULL,
     dispatch_id VARCHAR(50), 
