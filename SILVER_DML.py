@@ -170,11 +170,15 @@ final_disp = final_disp.merge(db_status, left_on='status_clean', right_on='statu
 # Fallback to unknown tech id if missing
 unknown_tech_id = db_techs[db_techs['first_name'] == 'Unknown']['technician_id'].iloc[0]
 final_disp['technician_id'] = final_disp['technician_id'].fillna(unknown_tech_id)
+valid_equipment = pd.read_sql("SELECT equipment_id FROM equipment", engine)['equipment_id'].drop_duplicates()
 
 silver_disp = final_disp[[
     'dispatch_id', 'equipment_id', 'dispatch_date_clean', 'technician_id', 
     'service_type_id', 'hours_spent', 'labor_cost_clean', 'resolution_summary', 'status_id'
 ]].rename(columns={'dispatch_date_clean': 'dispatch_date', 'labor_cost_clean': 'labor_cost'})
+
+silver_disp = silver_disp[silver_disp['equipment_id'].isin(valid_equipment)]
+silver_disp = silver_disp.drop_duplicates(subset=['dispatch_id'])
 
 silver_disp.to_sql('dispatches', engine, if_exists='append', index=False)
 
@@ -214,10 +218,18 @@ db_c_status = pd.read_sql("SELECT * FROM claimStatus", engine)
 df_claims['claim_date_clean'] = df_claims['claim_date'].apply(standardize_date)
 final_claims = df_claims.merge(db_c_status, left_on='status_clean', right_on='status_name')
 
+valid_dispatches = pd.read_sql("SELECT dispatch_id FROM dispatches", engine)['dispatch_id'].drop_duplicates()
+valid_parts = pd.read_sql("SELECT part_id FROM parts", engine)['part_id'].drop_duplicates()
+
 silver_claims = final_claims[[
     'claim_id', 'equipment_id', 'dispatch_id', 'part_id', 'claim_date_clean',
     'claim_amount', 'approved_amount', 'status_id', 'denial_reason', 'claim_notes'
 ]].rename(columns={'claim_date_clean': 'claim_date'})
+
+silver_claims = silver_claims[silver_claims['equipment_id'].isin(valid_equipment)]
+silver_claims.loc[~silver_claims['dispatch_id'].isin(valid_dispatches), 'dispatch_id'] = None
+silver_claims.loc[~silver_claims['part_id'].isin(valid_parts), 'part_id'] = None
+silver_claims = silver_claims.drop_duplicates(subset=['claim_id'])
 
 silver_claims.replace({'': None}).to_sql('warrantyClaims', engine, if_exists='append', index=False)
 
