@@ -93,5 +93,5 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Silver Scripts with validation"
 echo "==================================================================="
 
 mariadb < /opt/scripts/SILVER_DDL.sql
-python3 /opt/scripts/SILVER_DML.py
+python3 /opt/scripts/SILVER_PROCESS.py
 mariadb < /opt/scripts/SILVER_VAL.sql
