@@ -93,3 +93,5 @@ BEGIN
 END //
 
 DELIMITER ;
+
+CALL sp_Prepare_RAG_Payloads();
