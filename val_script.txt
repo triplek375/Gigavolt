@@ -26,7 +26,7 @@ echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Audit Logs Validation"
 echo "==================================================================="
 
-mariadb < /opt/scripts/AuditVAL.sql
+mariadb -f < /opt/scripts/AuditVAL.sql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validation Complete!"

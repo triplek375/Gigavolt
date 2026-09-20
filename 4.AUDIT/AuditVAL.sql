@@ -1,5 +1,5 @@
 # =====================================================================
-# VALIDATING TRIGGERS FOR IMMUTABILITY AND LOGGING
+# VALIDATING TRIGGERS FOR LOGGING AND IMMUTABILITY
 # =====================================================================
 USE gigavolt_db;
 
