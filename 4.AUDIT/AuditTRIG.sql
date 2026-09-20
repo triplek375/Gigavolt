@@ -1,9 +1,27 @@
 # =====================================================================
-# ADD TRIGGERS FOR AUDIT LOGGING
+# ADD TRIGGERS FOR AUDIT IMMUTABILITY AND LOGGING
 # =====================================================================
 USE gigavolt_db;
 
 DELIMITER //
+
+-- Prevent updates to the Audit_Logs table
+CREATE TRIGGER trg_prevent_audit_update
+BEFORE UPDATE ON Audit_Logs
+FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000' 
+    SET MESSAGE_TEXT = 'UPDATE operation failed: The Audit_Logs table is immutable.';
+END //
+
+-- Prevent deletions from the Audit_Logs table
+CREATE TRIGGER trg_prevent_audit_delete
+BEFORE DELETE ON Audit_Logs
+FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000' 
+    SET MESSAGE_TEXT = 'DELETE operation failed: The Audit_Logs table is immutable.';
+END //
 
 -- AFTER INSERT Trigger for customers
 CREATE TRIGGER trg_customers_after_insert
