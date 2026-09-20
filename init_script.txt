@@ -84,28 +84,28 @@ echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Bronze Scripts with validation"
 echo "==================================================================="
 
-mariadb < /opt/scripts/1.BRONZE/BronzeDDL.sql
-mariadb < /opt/scripts/1.BRONZE/BronzeDML.sql
-mariadb < /opt/scripts/1.BRONZE/BronzeVAL.sql
+mariadb < /opt/scripts/BronzeDDL.sql
+mariadb < /opt/scripts/BronzeDML.sql
+mariadb < /opt/scripts/BronzeVAL.sql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Silver Scripts with validation"
 echo "==================================================================="
 
-mariadb < /opt/scripts/2.SILVER/SilverDDL.sql
-python3 /opt/scripts/2.SILVER/SilverPROCESS.py
-mariadb < /opt/scripts/2.SILVER/SilverVAL.sql
+mariadb < /opt/scripts/SilverDDL.sql
+python3 /opt/scripts/SilverPROCESS.py
+mariadb < /opt/scripts/SilverVAL.sql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Scripts for LLM Context"
 echo "==================================================================="
 
-mariadb < /opt/scripts/3.PAYLOAD/PayloadCOL.sql
-mariadb < /opt/scripts/3.PAYLOAD/PayloadSP.sql
+mariadb < /opt/scripts/PayloadCOL.sql
+mariadb < /opt/scripts/PayloadSP.sql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Scripts for Audit Logs Setup"
 echo "==================================================================="
 
-mariadb < /opt/scripts/4.AUDIT/AuditDDL.sql
-mariadb < /opt/scripts/4.AUDIT/AuditTRIG.sql
+mariadb < /opt/scripts/AuditDDL.sql
+mariadb < /opt/scripts/AuditTRIG.sql
