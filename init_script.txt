@@ -109,5 +109,11 @@ mariadb < /opt/scripts/AuditDDL.sql
 mariadb < /opt/scripts/AuditTRIG.sql
 
 echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Scripts for Data Security"
+echo "==================================================================="
+
+mariadb < /opt/scripts/techVW.sql
+
+echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Instance Initialization Successful!"
 echo "==================================================================="
