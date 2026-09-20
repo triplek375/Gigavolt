@@ -84,14 +84,28 @@ echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Bronze Scripts with validation"
 echo "==================================================================="
 
-mariadb < /opt/scripts/BRONZE_DDL.sql
-mariadb < /opt/scripts/BRONZE_DML.sql
-mariadb < /opt/scripts/BRONZE_VAL.sql
+mariadb < /opt/scripts/1.BRONZE/DDL.sql
+mariadb < /opt/scripts/1.BRONZE/DML.sql
+mariadb < /opt/scripts/1.BRONZE/VAL.sql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Silver Scripts with validation"
 echo "==================================================================="
 
-mariadb < /opt/scripts/SILVER_DDL.sql
-python3 /opt/scripts/SILVER_PROCESS.py
-mariadb < /opt/scripts/SILVER_VAL.sql
+mariadb < /opt/scripts/2.SILVER/DDL.sql
+python3 /opt/scripts/2.SILVER/PROCESS.py
+mariadb < /opt/scripts/2.SILVER/VAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Scripts for LLM Context"
+echo "==================================================================="
+
+mariadb < /opt/scripts/3.PAYLOAD/COL.sql
+mariadb < /opt/scripts/3.PAYLOAD/SP.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Scripts for Audit Logs Setup"
+echo "==================================================================="
+
+mariadb < /opt/scripts/4.AUDIT/DDL.sql
+mariadb < /opt/scripts/4.AUDIT/TRIG.sql
