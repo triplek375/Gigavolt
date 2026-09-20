@@ -81,20 +81,18 @@ wget -q --show-progress "https://github.com/triplek375/Gigavolt/archive/refs/hea
 unzip -j Gigavolt.zip
 
 echo "==================================================================="
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Bronze Scripts with validation"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Bronze Scripts"
 echo "==================================================================="
 
 mariadb < /opt/scripts/BronzeDDL.sql
 mariadb < /opt/scripts/BronzeDML.sql
-mariadb < /opt/scripts/BronzeVAL.sql
 
 echo "==================================================================="
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Silver Scripts with validation"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Silver Scripts"
 echo "==================================================================="
 
 mariadb < /opt/scripts/SilverDDL.sql
 python3 /opt/scripts/SilverPROCESS.py
-mariadb < /opt/scripts/SilverVAL.sql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Scripts for LLM Context"
@@ -102,7 +100,6 @@ echo "==================================================================="
 
 mariadb < /opt/scripts/PayloadCOL.sql
 mariadb < /opt/scripts/PayloadSP.sql
-mariadb < /opt/scripts/PayloadVAL.sql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Scripts for Audit Logs Setup"
@@ -110,4 +107,7 @@ echo "==================================================================="
 
 mariadb < /opt/scripts/AuditDDL.sql
 mariadb < /opt/scripts/AuditTRIG.sql
-mariadb < /opt/scripts/AuditVAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Instance Initialization Successful!"
+echo "==================================================================="
