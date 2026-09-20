@@ -102,6 +102,7 @@ echo "==================================================================="
 
 mariadb < /opt/scripts/PayloadCOL.sql
 mariadb < /opt/scripts/PayloadSP.sql
+mariadb < /opt/scripts/PayloadVAL.sql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Scripts for Audit Logs Setup"
@@ -109,3 +110,4 @@ echo "==================================================================="
 
 mariadb < /opt/scripts/AuditDDL.sql
 mariadb < /opt/scripts/AuditTRIG.sql
+mariadb < /opt/scripts/AuditVAL.sql
