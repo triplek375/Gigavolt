@@ -1,5 +1,5 @@
 # =====================================================================
-# VALIDATING STORED PROCEDURE
+# VALIDATING TRIGGERS FOR IMMUTABILITY AND LOGGING
 # =====================================================================
 USE gigavolt_db;
 
@@ -18,6 +18,15 @@ SET
     email = 'jdoe.updated@example.com', 
     status_id = 2 
 WHERE customer_id = 'TEST-001';
+
+-- 3. Attempt an UPDATE on the Audit_Logs table
+UPDATE Audit_Logs 
+SET operation_type = 'TAMPERED' 
+WHERE audit_id = 1;
+
+-- 4. Attempt a DELETE on the Audit_Logs table
+DELETE FROM Audit_Logs 
+WHERE audit_id = 1;
 
 -- Query the immutable audit log to verify captured events
 SELECT *
