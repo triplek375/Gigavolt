@@ -8,4 +8,4 @@ CALL sp_Prepare_RAG_Payloads();
 SELECT *
 FROM rag_payloads 
 ORDER BY payload_id DESC 
-LIMIT 5;
+LIMIT 5 \G;

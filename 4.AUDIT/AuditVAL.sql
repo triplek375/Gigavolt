@@ -23,4 +23,4 @@ WHERE customer_id = 'TEST-001';
 SELECT *
 FROM Audit_Logs 
 WHERE record_id = 'TEST-001' 
-ORDER BY changed_at DESC;
+ORDER BY changed_at DESC \G;
