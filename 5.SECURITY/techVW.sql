@@ -24,7 +24,7 @@ CREATE ROLE IF NOT EXISTS 'tech_role';
 GRANT SELECT ON gigavolt_db.vw_customers_operational TO 'tech_role';
 
 -- Create a test user
-CREATE USER IF NOT EXISTS 'tech_user'@'localhost' IDENTIFIED BY 'SecurePass123!';
+CREATE USER IF NOT EXISTS 'tech_user'@'localhost' IDENTIFIED BY 'password';
 GRANT 'tech_role' TO 'tech_user'@'localhost';
 SET DEFAULT ROLE 'tech_role' FOR 'tech_user'@'localhost';
 
