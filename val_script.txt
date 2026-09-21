@@ -29,10 +29,10 @@ echo "==================================================================="
 mariadb -f < /opt/scripts/AuditVAL.sql
 
 echo "==================================================================="
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Views Validation"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Views Validation for tech_user"
 echo "==================================================================="
 
-mariadb -u tech_user -p SecurePass123! < /opt/scripts/techVAL.sql
+mariadb -u tech_user -p < /opt/scripts/techVAL.sql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validation Complete!"
