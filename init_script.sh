@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =======================================================================
-# AWS EC2 User Data Script - Ubuntu
+# AWS EC2 User Data Script - Ubuntu 26.04
 # Description: Automated unattended setup for MariaDB 12.3 with logging
 # =======================================================================
 
@@ -57,7 +57,7 @@ apt-get update -y
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing MariaDB server..."
 echo "==================================================================="
-apt-get install -y mariadb-server
+apt-get install -y mariadb-server mariadb-server-galera galera-4 mariadb-client libmariadb3 mariadb-backup mariadb-common mariadb-plugin-columnstore
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] MariaDB installation complete!"
