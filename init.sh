@@ -70,7 +70,7 @@ echo "==================================================================="
 mkdir -p /opt/scripts
 cd /opt/scripts
 wget -q --show-progress "https://github.com/triplek375/Gigavolt/archive/refs/heads/main.zip" -O Gigavolt.zip
-unzip -j Gigavolt.zip
+unzip -o -j Gigavolt.zip
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Instance Initialization Successful!"
