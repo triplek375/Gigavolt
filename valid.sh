@@ -18,7 +18,7 @@ if [[ "$1" == "columnStore" ]]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ColumnStore Speed Validation"
     echo "==================================================================="
 
-    mariadb -vv < /opt/scripts/colstoreVAL.sql
+    mariadb < /opt/scripts/colstoreVAL.sql
 
     echo "==================================================================="
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validation Complete!"

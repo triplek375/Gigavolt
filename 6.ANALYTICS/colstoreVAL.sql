@@ -3,6 +3,9 @@
 # =======================================================================
 USE gigavolt_db;
 
+-- Enable query profiling
+SET profiling = 1;
+
 -- InnoDB Execution Speed
 SELECT SQL_NO_CACHE 
      service_type_id, 
@@ -22,3 +25,8 @@ SELECT SQL_NO_CACHE
 FROM dispatches_cs 
 GROUP BY service_type_id 
 ORDER BY total_labor_cost DESC;
+
+-- Display execution times
+SHOW PROFILES;
+
+SET profiling = 0;
