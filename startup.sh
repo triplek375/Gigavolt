@@ -10,8 +10,20 @@
 # =======================================================================
 
 GRASTATE_FILE="/var/lib/mysql/grastate.dat"
-SAFE_TO_BOOTSTRAP=$(grep 'safe_to_bootstrap:' "$GRASTATE_FILE" | awk '{print $2}')
-SEQNO=$(grep 'seqno:' "$GRASTATE_FILE" | awk '{print $2}')
+
+if [ ! -f "$GRASTATE_FILE" ]; then
+    echo "==================================================================="
+    echo "Status: grastate.dat is missing."
+    echo "==================================================================="
+    SAFE_TO_BOOTSTRAP="0"
+    SEQNO="-1"
+    echo "==================================================================="
+    echo "Action: SAFE_TO_BOOTSTRAP=0 and SEQNO=-1."
+    echo "==================================================================="
+else
+    SAFE_TO_BOOTSTRAP=$(grep 'safe_to_bootstrap:' "$GRASTATE_FILE" | awk '{print $2}')
+    SEQNO=$(grep 'seqno:' "$GRASTATE_FILE" | awk '{print $2}')
+fi
 
 if [ "$SAFE_TO_BOOTSTRAP" -eq 1 ]; then
     echo "==================================================================="
