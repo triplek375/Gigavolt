@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # =======================================================================
-# (All) Galera Setup and Stop mariadb service
-# (Primary) Bootstrapping Cluster and Waiting for other nodes
+# (All) Galera Setup, Disable Auto Restart and Stop mariadb service
+# (Node A) Bootstrapping Cluster and Waiting for other nodes
 # (All) Start mariadb service
-# (Primary) Data Loading, Processing and Validation
-# Usage : bash /opt/scripts/setup.sh primary
+# (Node A) Data Loading, Processing and Validation
+# Node A: bash /opt/scripts/setup.sh primary
+# Others: bash /opt/scripts/setup.sh
 # =======================================================================
 
 echo "==================================================================="
@@ -23,6 +24,8 @@ sed -i 's/^#wsrep_slave_threads.*/wsrep_slave_threads=4/' /etc/mysql/mariadb.con
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Stopping mariadb service..."
 echo "==================================================================="
+
+systemctl disable mariadb
 
 systemctl stop mariadb
 
@@ -43,12 +46,6 @@ if [[ "$1" == "primary" ]]; then
         
         if [[ "$CLUSTER_SIZE" -ge "$EXPECTED_NODES" ]]; then
             echo "Success! Cluster size is $CLUSTER_SIZE."
-
-            echo "==================================================================="
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting mariadb service..."
-            echo "==================================================================="
-
-            systemctl start mariadb
 
             echo "==================================================================="
             echo "[$(date '+%Y-%m-%d %H:%M:%S')] Galera Setup Successful!"
@@ -115,11 +112,6 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Scripts for Data Security"
 echo "==================================================================="
 
 mariadb < /opt/scripts/techVW.sql
-
-echo "==================================================================="
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Load Data Successful!"
-echo "==================================================================="
-
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Bronze Validation"
