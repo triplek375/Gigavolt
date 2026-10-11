@@ -1,7 +1,7 @@
 import csv, random
 from datetime import date, timedelta
 
-print("Generating 500,000 rows...")
+print("Generating 150,000 rows...")
 with open('/opt/data/large_dispatches.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     for i in range(150000):

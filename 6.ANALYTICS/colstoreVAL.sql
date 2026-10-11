@@ -7,13 +7,10 @@ USE gigavolt_db;
 SET @start_innodb = SYSDATE(6);
 
 SELECT SQL_NO_CACHE 
-     service_type_id, 
-     COUNT(dispatch_id) AS total_dispatches, 
-     SUM(labor_cost) AS total_labor_cost, 
-     AVG(hours_spent) AS average_hours 
-FROM dispatches_large_innodb 
-GROUP BY service_type_id 
-ORDER BY total_labor_cost DESC;
+     SUM(POWER(labor_cost, 2)) AS sum_of_squares,
+     STDDEV_POP(labor_cost) AS standard_deviation,
+     VARIANCE(labor_cost) AS variance
+FROM dispatches_large_innodb;
 
 SET @end_innodb = SYSDATE(6);
 SET @time_innodb = TIMESTAMPDIFF(MICROSECOND, @start_innodb, @end_innodb) / 1000000.0;
@@ -22,13 +19,10 @@ SET @time_innodb = TIMESTAMPDIFF(MICROSECOND, @start_innodb, @end_innodb) / 1000
 SET @start_cs = SYSDATE(6);
 
 SELECT SQL_NO_CACHE 
-     service_type_id, 
-     COUNT(dispatch_id) AS total_dispatches, 
-     SUM(labor_cost) AS total_labor_cost, 
-     AVG(hours_spent) AS average_hours 
-FROM dispatches_large_cs 
-GROUP BY service_type_id 
-ORDER BY total_labor_cost DESC;
+     SUM(POWER(labor_cost, 2)) AS sum_of_squares,
+     STDDEV_POP(labor_cost) AS standard_deviation,
+     VARIANCE(labor_cost) AS variance
+FROM dispatches_cs_large;
 
 SET @end_cs = SYSDATE(6);
 SET @time_cs = TIMESTAMPDIFF(MICROSECOND, @start_cs, @end_cs) / 1000000.0;
