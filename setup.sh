@@ -4,7 +4,7 @@
 # (All) Galera Setup, Disable Auto Restart and Stop mariadb service
 # (Node A) 
 # - Bootstrapping Cluster and Waiting for other nodes
-# - If all nodes active, then Data Loading, Processing and Validation
+# - If all nodes active, then Data Loading and Processing
 # - Usage : bash /opt/scripts/setup.sh primary
 # (Others) 
 # - Joining the Cluster
@@ -115,40 +115,6 @@ if [[ "$1" == "primary" ]]; then
 
     echo "==================================================================="
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Data Definition and Loading Complete!"
-    echo "==================================================================="
-
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Bronze Validation"
-    echo "==================================================================="
-
-    mariadb < /opt/scripts/BronzeVAL.sql
-
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Silver Validation"
-    echo "==================================================================="
-
-    mariadb < /opt/scripts/SilverVAL.sql
-
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Stored Procedure Validation"
-    echo "==================================================================="
-
-    mariadb < /opt/scripts/PayloadVAL.sql
-
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Triggers Validation"
-    echo "==================================================================="
-
-    mariadb -f < /opt/scripts/AuditVAL.sql
-
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Views Validation for tech_user"
-    echo "==================================================================="
-
-    mariadb -u tech_user -p < /opt/scripts/techVAL.sql
-
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validation Complete!"
     echo "==================================================================="
 
 else
