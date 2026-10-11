@@ -1,20 +1,18 @@
 # =======================================================================
-# DEFINE OLAP TABLES
+# DEFINE OLAP TABLE
 # =======================================================================
 USE gigavolt_db;
 
-CREATE TABLE dispatches_analytics_innodb (
-    dispatch_id VARCHAR(50),
-    dispatch_date DATE,
-    service_type_name VARCHAR(50),
-    hours_spent DECIMAL(10,2),
-    labor_cost DECIMAL(10,2)
-) ENGINE=InnoDB;
+DROP TABLE IF EXISTS dispatches_cs;
 
-CREATE TABLE dispatches_analytics_cs (
+CREATE TABLE dispatches_cs (
     dispatch_id VARCHAR(50),
+    equipment_id VARCHAR(50),
     dispatch_date DATE,
-    service_type_name VARCHAR(50),
+    technician_id INT,
+    service_type_id INT,
     hours_spent DECIMAL(10,2),
-    labor_cost DECIMAL(10,2)
+    labor_cost DECIMAL(10,2),
+    resolution_summary TEXT,
+    status_id INT
 ) ENGINE=ColumnStore;
