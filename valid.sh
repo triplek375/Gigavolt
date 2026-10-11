@@ -6,6 +6,9 @@
 
 if [[ "$1" == "columnStore" ]]; then
     # Usage : bash /opt/scripts/valid.sh columnStore (only on node 3)
+
+    mkdir -p /opt/data
+    
     echo "==================================================================="
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Creating csv file with loads of data"
     echo "==================================================================="
