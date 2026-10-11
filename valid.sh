@@ -19,6 +19,7 @@ if [[ "$1" == "columnStore" ]]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running DDL and DML Script for ColumnStore"
     echo "==================================================================="
 
+    sed -i 's/dispatches_large_cs/dispatches_cs_large/g' /opt/scripts/colstoreDDL.sql /opt/scripts/colstoreDML.sql /opt/scripts/colstoreVAL.sql
     mariadb < /opt/scripts/colstoreDDL.sql
     mariadb < /opt/scripts/colstoreDML.sql
 
