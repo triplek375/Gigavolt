@@ -1,12 +1,9 @@
 #!/bin/bash
 
 # =======================================================================
-# Data Loading Script
+# Data Loading, Processing and Validation Script
+# Usage : bash /opt/scripts/3_data.sh
 # =======================================================================
-
-# Log all output (stdout & stderr) to a custom logfile
-LOGFILE="/var/log/data-load.log"
-exec > >(tee -a "${LOGFILE}") 2>&1
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Downloading data files from 622.gomillion.org"
@@ -15,14 +12,6 @@ mkdir -p /opt/data
 cd /opt/data
 wget -q --show-progress "https://622.gomillion.org/data/fall2026.zip" -O data.zip
 unzip data.zip
-
-echo "==================================================================="
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Downloading SQL scripts from github"
-echo "==================================================================="
-mkdir -p /opt/scripts
-cd /opt/scripts
-wget -q --show-progress "https://github.com/triplek375/Gigavolt/archive/refs/heads/main.zip" -O Gigavolt.zip
-unzip -j Gigavolt.zip
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Bronze Scripts"
@@ -60,4 +49,39 @@ mariadb < /opt/scripts/techVW.sql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Load Data Successful!"
+echo "==================================================================="
+
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Bronze Validation"
+echo "==================================================================="
+
+mariadb < /opt/scripts/BronzeVAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Silver Validation"
+echo "==================================================================="
+
+mariadb < /opt/scripts/SilverVAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Stored Procedure Validation"
+echo "==================================================================="
+
+mariadb < /opt/scripts/PayloadVAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Triggers Validation"
+echo "==================================================================="
+
+mariadb -f < /opt/scripts/AuditVAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Views Validation for tech_user"
+echo "==================================================================="
+
+mariadb -u tech_user -p < /opt/scripts/techVAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Data Validation Successful!"
 echo "==================================================================="

@@ -65,12 +65,17 @@ echo "Service Status: $(systemctl is-active mariadb)"
 echo "==================================================================="
 
 echo "==================================================================="
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Configuring Galera Settings..."
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Downloading code files from github"
 echo "==================================================================="
+mkdir -p /opt/scripts
+cd /opt/scripts
+wget -q --show-progress "https://github.com/triplek375/Gigavolt/archive/refs/heads/main.zip" -O Gigavolt.zip
+unzip -j Gigavolt.zip
 
-sed -i 's/^#wsrep_cluster_name.*/wsrep_cluster_name="Galera Cluster"/' /etc/mysql/mariadb.conf.d/60-galera.cnf
-sed -i 's/^#innodb_flush_log_at_trx_commit.*/innodb_flush_log_at_trx_commit=0/' /etc/mysql/mariadb.conf.d/60-galera.cnf
-sed -i 's/^#wsrep_slave_threads.*/wsrep_slave_threads=4/' /etc/mysql/mariadb.conf.d/60-galera.cnf
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Stopping mariadb service"
+echo "==================================================================="
+systemctl stop mariadb
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Instance Initialization Successful!"
