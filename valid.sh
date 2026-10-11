@@ -6,6 +6,11 @@
 
 if [[ "$1" == "columnStore" ]]; then
     # Usage : bash /opt/scripts/valid.sh columnStore (only on node 3)
+    echo "==================================================================="
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Creating csv file with loads of data"
+    echo "==================================================================="
+
+    python3 /opt/scripts/colstoreData.py
 
     echo "==================================================================="
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running DDL and DML Script for ColumnStore"
