@@ -5,7 +5,7 @@
 # (Primary) Bootstrapping Cluster and Waiting for other nodes
 # (All) Start mariadb service
 # (Primary) Data Loading, Processing and Validation
-# Usage : bash /opt/scripts/2_galera.sh primary
+# Usage : bash /opt/scripts/setup.sh primary
 # =======================================================================
 
 echo "==================================================================="
@@ -37,7 +37,7 @@ if [[ "$1" == "primary" ]]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] PAUSED: Waiting for other nodes..."
     echo "==================================================================="
     
-    EXPECTED_NODES = $(echo "$ip_addresses" | awk -F, '{print NF}')
+    EXPECTED_NODES=$(echo "$ip_addresses" | awk -F, '{print NF}')
     while true; do
         CLUSTER_SIZE=$(mariadb -N -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';" | awk '{print $2}')
         
