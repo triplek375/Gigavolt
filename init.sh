@@ -73,10 +73,5 @@ wget -q --show-progress "https://github.com/triplek375/Gigavolt/archive/refs/hea
 unzip -j Gigavolt.zip
 
 echo "==================================================================="
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Stopping mariadb service"
-echo "==================================================================="
-systemctl stop mariadb
-
-echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Instance Initialization Successful!"
 echo "==================================================================="

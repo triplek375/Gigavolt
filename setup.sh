@@ -1,9 +1,78 @@
 #!/bin/bash
 
 # =======================================================================
-# Data Loading, Processing and Validation Script
-# Usage : bash /opt/scripts/3_data.sh
+# (All) Galera Setup and Stop mariadb service
+# (Primary) Bootstrapping Cluster and Waiting for other nodes
+# (All) Start mariadb service
+# (Primary) Data Loading, Processing and Validation
+# Usage : bash /opt/scripts/2_galera.sh primary
 # =======================================================================
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Galera Setup..."
+echo "==================================================================="
+
+read -p "Enter IP addresses for all nodes : " ip_addresses
+
+sed -i 's/^#wsrep_cluster_name.*/wsrep_cluster_name="Galera Cluster"/' /etc/mysql/mariadb.conf.d/60-galera.cnf
+sed -i "s|^#wsrep_cluster_address.*|wsrep_cluster_address=\"gcomm://$ip_addresses\"|" /etc/mysql/mariadb.conf.d/60-galera.cnf
+sed -i 's/^#wsrep_on.*/wsrep_on=ON/' /etc/mysql/mariadb.conf.d/60-galera.cnf
+sed -i 's/^#innodb_flush_log_at_trx_commit.*/innodb_flush_log_at_trx_commit=0/' /etc/mysql/mariadb.conf.d/60-galera.cnf
+sed -i 's/^#wsrep_slave_threads.*/wsrep_slave_threads=4/' /etc/mysql/mariadb.conf.d/60-galera.cnf
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Stopping mariadb service..."
+echo "==================================================================="
+
+systemctl stop mariadb
+
+if [[ "$1" == "primary" ]]; then
+    echo "==================================================================="
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] (Primary) Bootstrapping Cluster..."
+    echo "==================================================================="
+
+    sudo galera_new_cluster
+    
+    echo "==================================================================="
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] PAUSED: Waiting for other nodes..."
+    echo "==================================================================="
+    
+    EXPECTED_NODES = $(echo "$ip_addresses" | awk -F, '{print NF}')
+    while true; do
+        CLUSTER_SIZE=$(mariadb -N -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';" | awk '{print $2}')
+        
+        if [[ "$CLUSTER_SIZE" -ge "$EXPECTED_NODES" ]]; then
+            echo "Success! Cluster size is $CLUSTER_SIZE."
+
+            echo "==================================================================="
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting mariadb service..."
+            echo "==================================================================="
+
+            systemctl start mariadb
+
+            echo "==================================================================="
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Galera Setup Successful!"
+            echo "==================================================================="
+            
+            break
+        fi
+        
+        echo "Current cluster size: ${CLUSTER_SIZE:-0}/$EXPECTED_NODES. Waiting 10 seconds..."
+        sleep 10
+    done
+else
+    echo "==================================================================="
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] (Other) Joining existing Cluster..."
+    echo "==================================================================="
+
+    systemctl start mariadb
+    
+    echo "==================================================================="
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Galera Setup Successful! Exiting..."
+    echo "==================================================================="
+    
+    exit 0
+fi
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Downloading data files from 622.gomillion.org"
