@@ -3,17 +3,18 @@
 # =======================================================================
 USE gigavolt_db;
 
--- Create the InnoDB analytical table
-CREATE TABLE dispatches_analytics_innodb ENGINE=InnoDB AS
-SELECT 
-    d.dispatch_id, 
-    d.dispatch_date, 
-    s.service_type_name, 
-    d.hours_spent, 
-    d.labor_cost
-FROM dispatches d
-JOIN serviceTypes s ON d.service_type_id = s.service_type_id;
+CREATE TABLE dispatches_analytics_innodb (
+    dispatch_id VARCHAR(50),
+    dispatch_date DATE,
+    service_type_name VARCHAR(50),
+    hours_spent DECIMAL(10,2),
+    labor_cost DECIMAL(10,2)
+) ENGINE=InnoDB;
 
--- Create the ColumnStore equivalent
-CREATE TABLE dispatches_analytics_cs ENGINE=ColumnStore AS
-SELECT * FROM dispatches_analytics_innodb;
+CREATE TABLE dispatches_analytics_cs (
+    dispatch_id VARCHAR(50),
+    dispatch_date DATE,
+    service_type_name VARCHAR(50),
+    hours_spent DECIMAL(10,2),
+    labor_cost DECIMAL(10,2)
+) ENGINE=ColumnStore;

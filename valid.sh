@@ -8,10 +8,11 @@ if [[ "$1" == "columnStore" ]]; then
     # Usage : bash /opt/scripts/valid.sh columnStore (only on node 3)
 
     echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running DDL Script for ColumnStore"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running DDL and DML Script for ColumnStore"
     echo "==================================================================="
 
     mariadb < /opt/scripts/colstoreDDL.sql
+    mariadb < /opt/scripts/colstoreDML.sql
 
     echo "==================================================================="
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ColumnStore Speed Validation"
