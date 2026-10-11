@@ -1,6 +1,7 @@
 # =======================================================================
 # VALIDATING SPEED BENEFITS OF COLUMNSTORE OVER INNODB
 # =======================================================================
+USE gigavolt_db;
 
 # SQL_NO_CACHE 
 # Ensures we measure actual performance rather than retrieving a cached result

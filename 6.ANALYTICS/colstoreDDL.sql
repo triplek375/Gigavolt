@@ -1,6 +1,7 @@
 # =======================================================================
 # DEFINE OLAP TABLES
 # =======================================================================
+USE gigavolt_db;
 
 -- Create the InnoDB analytical table
 CREATE TABLE dispatches_analytics_innodb ENGINE=InnoDB AS
