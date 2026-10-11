@@ -2,11 +2,13 @@
 
 # =======================================================================
 # (All) Galera Setup, Disable Auto Restart and Stop mariadb service
-# (Node A) Bootstrapping Cluster and Waiting for other nodes
-# (All) Start mariadb service
-# (Node A) Data Loading, Processing and Validation
-# Node A: bash /opt/scripts/setup.sh primary
-# Others: bash /opt/scripts/setup.sh
+# (Node A) 
+# - Bootstrapping Cluster and Waiting for other nodes
+# - If all nodes active, then Data Loading, Processing and Validation
+# - Usage : bash /opt/scripts/setup.sh primary
+# (Others) 
+# - Joining the Cluster
+# - Usage : bash /opt/scripts/setup.sh
 # =======================================================================
 
 echo "==================================================================="
@@ -59,7 +61,7 @@ if [[ "$1" == "primary" ]]; then
             echo "Success! Cluster size is $CLUSTER_SIZE."
 
             echo "==================================================================="
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Galera Setup Successful!"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Galera Setup Complete!"
             echo "==================================================================="
             
             break
@@ -112,7 +114,7 @@ if [[ "$1" == "primary" ]]; then
     mariadb < /opt/scripts/techVW.sql
 
     echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Data Definition and Loading Successful!"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Data Definition and Loading Complete!"
     echo "==================================================================="
 
     echo "==================================================================="
@@ -146,7 +148,7 @@ if [[ "$1" == "primary" ]]; then
     mariadb -u tech_user -p < /opt/scripts/techVAL.sql
 
     echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validation Successful!"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validation Complete!"
     echo "==================================================================="
 
 else
@@ -157,28 +159,7 @@ else
     systemctl start mariadb
     
     echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Galera Setup Successful!"
-    echo "==================================================================="
-    
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Scripts for Analytics"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Galera Setup Complete!"
     echo "==================================================================="
 
-    mariadb < /opt/scripts/colstoreDDL.sql
-
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Data Definition and Loading Successful!"
-    echo "==================================================================="
-
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ColumnStore Speed Validation"
-    echo "==================================================================="
-
-    mariadb < /opt/scripts/colstoreVAL.sql
-
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validation Successful!"
-    echo "==================================================================="
-
-    mariadb < /opt/scripts/analyticsVAL.sql
 fi
