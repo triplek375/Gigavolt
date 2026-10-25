@@ -3,39 +3,13 @@
 # =======================================================================
 # Data Validation
 # Usage : bash /opt/scripts/valid.sh
+# Usage : bash /opt/scripts/valid.sh vector
 # =======================================================================
 
-if [[ "$1" == "columnStore" ]]; then
-    # Usage : bash /opt/scripts/valid.sh columnStore (only on node 3)
+if [[ "$1" == "vector" ]]; then
 
-    mkdir -p /opt/data
     
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Creating csv file with loads of data"
-    echo "==================================================================="
-
-    python3 /opt/scripts/colstoreData.py
-
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running DDL and DML Script for ColumnStore"
-    echo "==================================================================="
-
-    sed -i 's/dispatches_large_cs/dispatches_cs_large/g' /opt/scripts/colstoreDDL.sql /opt/scripts/colstoreDML.sql /opt/scripts/colstoreVAL.sql
-    mariadb < /opt/scripts/colstoreDDL.sql
-    mariadb < /opt/scripts/colstoreDML.sql
-
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ColumnStore Speed Validation"
-    echo "==================================================================="
-
-    mariadb < /opt/scripts/colstoreVAL.sql
-
-    echo "==================================================================="
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validation Complete!"
-    echo "==================================================================="
 else
-    # Usage : bash /opt/scripts/valid.sh
-
     echo "==================================================================="
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Bronze Validation"
     echo "==================================================================="
@@ -65,6 +39,12 @@ else
     echo "==================================================================="
 
     mariadb -u tech_user -p < /opt/scripts/techVAL.sql
+
+    echo "==================================================================="
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ColumnStore Speed Validation"
+    echo "==================================================================="
+
+    mariadb < /opt/scripts/colstoreVAL.sql
 
     echo "==================================================================="
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validation Complete!"

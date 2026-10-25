@@ -112,6 +112,21 @@ if [[ "$1" == "primary" ]]; then
     echo "==================================================================="
 
     mariadb < /opt/scripts/techVW.sql
+  
+    echo "==================================================================="
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Creating csv file with loads of data"
+    echo "==================================================================="
+
+    mkdir -p /opt/data
+    python3 /opt/scripts/colstoreData.py
+
+    echo "==================================================================="
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running DDL and DML Script for ColumnStore"
+    echo "==================================================================="
+
+    sed -i 's/dispatches_large_cs/dispatches_cs_large/g' /opt/scripts/colstoreDDL.sql /opt/scripts/colstoreDML.sql /opt/scripts/colstoreVAL.sql
+    mariadb < /opt/scripts/colstoreDDL.sql
+    mariadb < /opt/scripts/colstoreDML.sql
 
     echo "==================================================================="
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Data Definition and Loading Complete!"
