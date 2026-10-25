@@ -6,6 +6,11 @@
 # Usage : bash /opt/scripts/valid.sh vector
 # =======================================================================
 
+# Enable strict error handling
+set -e
+# Activate the Python virtual environment
+source /opt/vector_env/bin/activate
+
 if [[ "$1" == "vector" ]]; then
     python3 /opt/scripts/pdfChunking.py
     
