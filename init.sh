@@ -5,9 +5,10 @@
 # Description: Automated unattended setup for MariaDB 12.3 with logging
 # =======================================================================
 
+# Enable strict error handling
+set -e
 # Log all output (stdout & stderr) to a custom logfile
-LOGFILE="/var/log/user-data.log"
-exec > >(tee -a "${LOGFILE}") 2>&1
+exec > >(tee -a "/var/log/user-data.log"|logger -t user-data -s 2>/dev/console) 2>&1
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting User Data initialization..."
@@ -18,6 +19,7 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] Configuring non-interactive mode"
 echo "==================================================================="
 export DEBIAN_FRONTEND=noninteractive
 export NEEDRESTART_MODE=a
+UBUNTU_CODENAME=$(lsb_release -cs)
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Updating list of available packages"
@@ -32,7 +34,8 @@ apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--fo
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing prerequisites utilities for repository setup"
 echo "==================================================================="
-apt-get install -y apt-transport-https curl unzip python3-pandas python3-sqlalchemy python3-pymysql
+apt-get install -y apt-transport-https curl unzip
+apt-get install -y python3-pandas python3-sqlalchemy python3-pymysql python3-PyPDF2
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Adding MariaDB community repository..."
@@ -57,7 +60,12 @@ apt-get update -y
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing MariaDB server..."
 echo "==================================================================="
-apt-get install -y mariadb-server mariadb-server-galera galera-4 mariadb-client libmariadb3 mariadb-backup mariadb-common mariadb-plugin-columnstore
+apt-get install -y mariadb-server mariadb-client mariadb-backup mariadb-common 
+apt-get install -y mariadb-server-galera galera-4 libmariadb3 mariadb-plugin-columnstore
+
+# Clean apt cache to free disk space immediately
+apt-get clean
+rm -rf /var/lib/apt/lists/*
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] MariaDB installation complete!"
