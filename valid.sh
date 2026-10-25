@@ -12,6 +12,19 @@ set -e
 source /opt/vector_env/bin/activate
 
 if [[ "$1" == "vector" ]]; then
+    # 1. Create a 2GB swap file
+    fallocate -l 2G /swapfile
+
+    # 2. Secure permissions
+    chmod 600 /swapfile
+
+    # 3. Format and enable swap
+    mkswap /swapfile
+    swapon /swapfile
+
+    # 4. Verify swap is active
+    free -h
+
     python3 /opt/scripts/pdfChunking.py
     
 else
