@@ -78,11 +78,12 @@ if [[ "$1" == "primary" ]]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Downloading data files from 622.gomillion.org"
     echo "==================================================================="
     mkdir -p /opt/data
-    cd /opt/data
-    wget -q --show-progress "https://622.gomillion.org/data/fall2026.zip" -O data.zip
-    unzip data.zip
-    wget -q --show-progress "https://622.gomillion.org/data/UnstructuredData.zip" -O UnstructuredData.zip
-    unzip UnstructuredData.zip
+    wget -q --show-progress "https://622.gomillion.org/data/fall2026.zip" -O /opt/data/data.zip
+    unzip /opt/data/data.zip -d /opt/data
+
+    mkdir -p /opt/undata
+    wget -q --show-progress "https://622.gomillion.org/data/UnstructuredData.zip" -O /opt/undata/UnstructuredData.zip
+    unzip -j /opt/undata/UnstructuredData.zip -d /opt/undata
 
     echo "==================================================================="
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Python venv and dependencies setup..."
