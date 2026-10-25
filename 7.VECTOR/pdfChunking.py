@@ -277,7 +277,7 @@ def run_query_loop(db: SimpleVectorDB):
 # ============================================================================
 
 def main():
-    target_dir = Path('/opt/data/Unstructured Data/')
+    target_dir = Path('/opt/undata/')
     print(f"Target PDF directory: {target_dir}")
     
     pdf_paths = find_pdfs_in_directory(target_dir)
