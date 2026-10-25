@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Simplified PDF Vector Search
-Reads all PDF files from the VECTOR directory, chunks using fixed-size chunking,
+Reads all PDF files from the Unstructured Data folder unzipped in setup.sh (/opt/data), chunks using fixed-size chunking,
 stores embeddings in ChromaDB, and provides an interactive query search.
 """
 
@@ -277,7 +277,7 @@ def run_query_loop(db: SimpleVectorDB):
 # ============================================================================
 
 def main():
-    target_dir = Path(__file__).resolve().parent
+    target_dir = Path('/opt/data/Unstructured Data/')
     print(f"Target PDF directory: {target_dir}")
     
     pdf_paths = find_pdfs_in_directory(target_dir)
@@ -289,16 +289,16 @@ def main():
     for i, p in enumerate(pdf_paths, 1):
         print(f"  {i}. {os.path.basename(p)}")
     
-    chunks = process_and_chunk_pdfs(pdf_paths, chunk_size=500, overlap=50)
-    if not chunks:
-        print("❌ No chunks created from PDFs.")
-        return
+    # chunks = process_and_chunk_pdfs(pdf_paths, chunk_size=500, overlap=50)
+    # if not chunks:
+    #     print("❌ No chunks created from PDFs.")
+    #     return
     
-    db_path = str(target_dir / "simple_vectordb")
-    db = SimpleVectorDB(db_path=db_path)
-    db.add_chunks(chunks)
+    # db_path = str(target_dir / "simple_vectordb")
+    # db = SimpleVectorDB(db_path=db_path)
+    # db.add_chunks(chunks)
     
-    run_query_loop(db)
+    # run_query_loop(db)
 
 
 if __name__ == "__main__":
