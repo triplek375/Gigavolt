@@ -82,6 +82,22 @@ if [[ "$1" == "primary" ]]; then
     unzip UnstructuredData.zip
 
     echo "==================================================================="
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Python venv and dependencies setup..."
+    echo "==================================================================="
+    # Route pip temp operations to EBS disk (/var/tmp) instead of RAM tmpfs (/tmp)
+    export TMPDIR=/var/tmp
+    
+    python3 -m venv /opt/vector_env
+    source /opt/vector_env/bin/activate
+    /opt/vector_env/bin/pip install --no-cache-dir --upgrade pip
+
+    # Install lightweight CPU-only PyTorch first with no wheel caching
+    /opt/vector_env/bin/pip install --no-cache-dir torch --extra-index-url https://download.pytorch.org/whl/cpu
+
+    # Install remaining lab dependencies
+    /opt/vector_env/bin/pip install --no-cache-dir pymysql sqlalchemy pandas PyPDF2 chromadb sentence-transformers
+
+    echo "==================================================================="
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Bronze Scripts"
     echo "==================================================================="
 

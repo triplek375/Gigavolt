@@ -8,7 +8,7 @@
 # Enable strict error handling
 set -e
 # Log all output (stdout & stderr) to a custom logfile
-exec > >(tee -a "/var/log/user-data.log"|logger -t user-data -s 2>/dev/console) 2>&1
+exec > >(tee -a "/var/log/user-data.log") 2>&1
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting User Data initialization..."
@@ -34,8 +34,7 @@ apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--fo
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing prerequisites utilities for repository setup"
 echo "==================================================================="
-apt-get install -y apt-transport-https curl unzip
-apt-get install -y python3-pandas python3-sqlalchemy python3-pymysql python3-PyPDF2
+apt-get install -y apt-transport-https curl unzip python3-pip python3-venv
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Adding MariaDB community repository..."
