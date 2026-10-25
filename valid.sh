@@ -12,8 +12,16 @@ set -e
 source /opt/vector_env/bin/activate
 
 if [[ "$1" == "vector" ]]; then
-    python3 /opt/scripts/pdfChunking.py
+    python3 /opt/scripts/chunking_engine.py --data-dir /opt/undata --chunk-size 384 --overlap 64 --output /opt/undata/gigavolt_chunks.json --stats
     
+    python3 /opt/scripts/generate_embeddings.py --input-chunks /opt/undata/gigavolt_chunks.json --batch-size 32 --output-prefix /opt/undata/gigavolt_embeddings
+    
+    # Ingest precomputed embeddings into ChromaDB
+    python3 /opt/scripts/vector_db.py --db-path /opt/undata/gigavolt_vectordb --populate-from-embeddings /opt/undata/gigavolt_embeddings --M 32 --ef-construction 100 --ef-search 40
+    
+    # Run latency benchmark SLA test
+    python3 /opt/scripts/vector_db.py --db-path /opt/undata/gigavolt_vectordb --benchmark
+
 else
     echo "==================================================================="
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Bronze Validation"
