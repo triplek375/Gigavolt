@@ -78,6 +78,8 @@ if [[ "$1" == "primary" ]]; then
     cd /opt/data
     wget -q --show-progress "https://622.gomillion.org/data/fall2026.zip" -O data.zip
     unzip data.zip
+    wget -q --show-progress "https://622.gomillion.org/data/UnstructuredData.zip" -O UnstructuredData.zip
+    unzip UnstructuredData.zip
 
     echo "==================================================================="
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Bronze Scripts"
