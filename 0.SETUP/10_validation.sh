@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# =======================================================================
+# Data Validation
+# Usage : bash /opt/scripts/valid.sh
+# =======================================================================
+
+# Enable strict error handling
+set -e
+# Activate the Python virtual environment
+source /opt/vector_env/bin/activate
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Bronze Validation"
+echo "==================================================================="
+
+mariadb < /opt/scripts/BronzeVAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Silver Validation"
+echo "==================================================================="
+
+mariadb < /opt/scripts/SilverVAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Stored Procedure Validation"
+echo "==================================================================="
+
+mariadb < /opt/scripts/PayloadVAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Triggers Validation"
+echo "==================================================================="
+
+mariadb -f < /opt/scripts/AuditVAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Views Validation for tech_user"
+echo "==================================================================="
+
+mariadb -u tech_user -p < /opt/scripts/techVAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ColumnStore Speed Validation"
+echo "==================================================================="
+
+mariadb < /opt/scripts/colstoreVAL.sql
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Vector Benchmarking"
+echo "==================================================================="
+
+python3 /opt/scripts/vector_db.py --db-path /opt/undata/gigavolt_vectordb --benchmark
+
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validation Complete!"
+echo "==================================================================="
