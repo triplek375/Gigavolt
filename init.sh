@@ -10,19 +10,43 @@ set -e
 exec > >(tee -a "/var/log/user-data.log") 2>&1
 
 echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Configuring non-interactive mode"
+echo "==================================================================="
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+UBUNTU_CODENAME=$(lsb_release -cs)
+
+echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting User Data initialization..."
 echo "==================================================================="
 
-bash /opt/scripts/0_ubuntu.sh
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Updating list of available packages"
+echo "==================================================================="
+apt-get update -y
 
-bash /opt/scripts/1_github.sh
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Upgrading all installed packages"
+echo "==================================================================="
+apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
-bash /opt/scripts/2_data.sh
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing prerequisites utilities for repository setup"
+echo "==================================================================="
+apt-get install -y apt-transport-https curl unzip
 
-bash /opt/scripts/3_mariaDB.sh
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Downloading code files from github"
+echo "==================================================================="
+mkdir -p /opt/scripts
+wget -q --show-progress "https://github.com/triplek375/Gigavolt/archive/refs/heads/main.zip" -O /opt/scripts/Gigavolt.zip
+unzip -o -j /opt/scripts/Gigavolt.zip -d /opt/scripts
 
-bash /opt/scripts/4_mongoDB.sh
+bash /opt/scripts/1_data.sh
 
+bash /opt/scripts/2_mariaDB.sh
+
+bash /opt/scripts/5_mongoDB.sh
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Instance Initialization Successful!"

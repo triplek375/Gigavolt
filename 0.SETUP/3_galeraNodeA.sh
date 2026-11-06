@@ -9,6 +9,8 @@ echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Galera Setup..."
 echo "==================================================================="
 
+apt-get install -y mariadb-backup mariadb-common mariadb-server-galera galera-4 libmariadb3 mariadb-plugin-columnstore
+
 read -p "Enter IP addresses for all nodes : " ip_addresses
 
 sed -i 's/^.*wsrep_cluster_name.*/wsrep_cluster_name="Galera Cluster"/' /etc/mysql/mariadb.conf.d/60-galera.cnf
