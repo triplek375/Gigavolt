@@ -46,8 +46,6 @@ bash /opt/scripts/1_data.sh
 
 bash /opt/scripts/2_mariaDB.sh
 
-bash /opt/scripts/5_mongoDB.sh
-
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Instance Initialization Successful!"
 echo "==================================================================="
