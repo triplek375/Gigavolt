@@ -3,7 +3,7 @@
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ollama Setup"
 echo "==================================================================="
-#export HOME="${HOME:-/root}"
+export HOME="${HOME:-/root}"
 
 sudo apt update && sudo apt upgrade -y
 
