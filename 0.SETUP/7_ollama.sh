@@ -3,7 +3,6 @@
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ollama Setup"
 echo "==================================================================="
-export HOME="${HOME:-/root}"
 
 sudo apt update && sudo apt upgrade -y
 
@@ -11,6 +10,7 @@ sudo apt update && sudo apt upgrade -y
 curl -fsSL https://ollama.com/install.sh | sh
 
 systemctl start ollama
+systemctl enable ollama
 
 # Pull a model (e.g., llama2 or a smaller model like phi)
 ollama pull phi

@@ -17,15 +17,15 @@ source /opt/vector_env/bin/activate
 # Install remaining lab dependencies
 /opt/vector_env/bin/pip install --no-cache-dir pymysql sqlalchemy pandas PyPDF2 chromadb sentence-transformers
 
-# 1. Create a 2GB swap file
-fallocate -l 2G /swapfile
+# # 1. Create a 2GB swap file
+# fallocate -l 2G /swapfile
 
-# 2. Secure permissions
-chmod 600 /swapfile
+# # 2. Secure permissions
+# chmod 600 /swapfile
 
-# 3. Format and enable swap
-mkswap /swapfile
-swapon /swapfile
+# # 3. Format and enable swap
+# mkswap /swapfile
+# swapon /swapfile
 
-# 4. Verify swap is active
-free -h
+# # 4. Verify swap is active
+# free -h
