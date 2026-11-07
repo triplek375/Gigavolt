@@ -2,6 +2,9 @@
 
 # =======================================================================
 # AWS EC2 User Data Script
+
+# Launch an EC2 instance with Ubuntu on t3.large:
+# Storage: At least 20 GB
 # =======================================================================
 
 # Enable strict error handling
@@ -44,7 +47,13 @@ unzip -o -j /opt/scripts/Gigavolt.zip -d /opt/scripts
 
 bash /opt/scripts/1_data.sh
 
+bash /opt/scripts/2_mariaDB.sh
+
 bash /opt/scripts/5_mongoDB.sh
+
+bash /opt/scripts/6_vectorDB.sh
+
+bash /opt/scripts/7_ollama.sh
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Instance Initialization Successful!"
