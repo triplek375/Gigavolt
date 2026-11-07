@@ -7,7 +7,7 @@ echo "==================================================================="
 # Enable strict error handling
 set -e
 # Activate the Python virtual environment
-source /opt/vector_env/bin/activate
+source /opt/venv/bin/activate
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Bronze Validation"

@@ -4,6 +4,11 @@ echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Data Pipeline"
 echo "==================================================================="
 
+# Enable strict error handling
+set -e
+# Activate the Python virtual environment
+source /opt/venv/bin/activate
+
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Bronze Scripts"
 echo "==================================================================="
