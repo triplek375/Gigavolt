@@ -22,11 +22,13 @@ from datetime import datetime, date, timezone
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Union
 
-# Ensure 7.VECTOR is in Python path for importing vector_db & generate_embeddings
+# Ensure 7.VECTOR and project root are in Python path
 CURRENT_DIR = Path(__file__).resolve().parent
-VECTOR_DIR = CURRENT_DIR / "7.VECTOR"
-if str(VECTOR_DIR) not in sys.path:
-    sys.path.append(str(VECTOR_DIR))
+REPO_ROOT = CURRENT_DIR.parent if CURRENT_DIR.name == "10.HYBRID" else CURRENT_DIR
+VECTOR_DIR = REPO_ROOT / "7.VECTOR"
+for path_entry in [str(VECTOR_DIR), str(REPO_ROOT)]:
+    if path_entry not in sys.path:
+        sys.path.append(path_entry)
 
 # Configure logging
 logging.basicConfig(
@@ -392,7 +394,16 @@ class VectorDocRetriever:
     """
 
     def __init__(self, db_path: Optional[str] = None):
-        self.db_path = db_path
+        if db_path:
+            self.db_path = db_path
+        elif os.getenv("VECTOR_DB_PATH"):
+            self.db_path = os.getenv("VECTOR_DB_PATH")
+        elif Path("/opt/undata/gigavolt_vectordb").exists():
+            self.db_path = "/opt/undata/gigavolt_vectordb"
+        elif (REPO_ROOT / "gigavolt_vectordb").exists():
+            self.db_path = str(REPO_ROOT / "gigavolt_vectordb")
+        else:
+            self.db_path = db_path
         self._vector_db: Optional[Any] = None
 
     def get_vector_db(self) -> Optional[Any]:
