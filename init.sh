@@ -45,6 +45,18 @@ mkdir -p /opt/scripts
 wget -q --show-progress "https://github.com/triplek375/Gigavolt/archive/refs/heads/main.zip" -O /opt/scripts/Gigavolt.zip
 unzip -o -j /opt/scripts/Gigavolt.zip -d /opt/scripts
 
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Python venv and dependencies setup..."
+echo "==================================================================="
+
+apt-get install -y python3-venv python3-pip
+# Route pip temp operations to EBS disk (/var/tmp) instead of RAM tmpfs (/tmp)
+export TMPDIR=/var/tmp
+
+python3 -m venv /opt/venv
+source /opt/venv/bin/activate
+/opt/venv/bin/pip install --no-cache-dir --upgrade pip
+
 bash /opt/scripts/1_data.sh
 
 bash /opt/scripts/2_mariaDB.sh

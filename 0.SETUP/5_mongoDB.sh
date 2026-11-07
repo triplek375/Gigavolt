@@ -16,3 +16,6 @@ sudo apt-get install -y mongodb-org
 
 sudo systemctl start mongod
 sudo systemctl enable mongod
+
+# Install remaining lab dependencies
+/opt/venv/bin/pip install --no-cache-dir pymongo
