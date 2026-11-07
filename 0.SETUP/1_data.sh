@@ -10,3 +10,5 @@ unzip /opt/data/data.zip -d /opt/data
 mkdir -p /opt/undata
 wget -q --show-progress "https://622.gomillion.org/data/UnstructuredData.zip" -O /opt/undata/UnstructuredData.zip
 unzip -j /opt/undata/UnstructuredData.zip -d /opt/undata
+
+wget -q --show-progress "https://622.gomillion.org/data/telemetry_data.json" -O /opt/undata/telemetry_data.json
