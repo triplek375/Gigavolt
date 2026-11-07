@@ -8,7 +8,6 @@
 # If safe_to_bootstrap is 0 and seqno is not -1, manually start mariadb using seqno
 # If safe_to_bootstrap is 0 and seqno is -1, create a new cluster
 # Else, grastate.dat file is corrupt and a new cluster must be created
-# Usage : bash /opt/scripts/startup.sh
 # =======================================================================
 
 GRASTATE_FILE="/var/lib/mysql/grastate.dat"

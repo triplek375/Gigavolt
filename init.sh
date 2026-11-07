@@ -55,6 +55,10 @@ bash /opt/scripts/6_vectorDB.sh
 
 bash /opt/scripts/7_ollama.sh
 
+bash /opt/scripts/9_pipeline.sh
+
+bash /opt/scripts/10_validation.sh
+
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Instance Initialization Successful!"
 echo "==================================================================="
