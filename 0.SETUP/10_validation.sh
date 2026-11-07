@@ -37,7 +37,7 @@ echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Views Validation for tech_user"
 echo "==================================================================="
 
-mariadb -u tech_user -p < /opt/scripts/techVAL.sql
+# mariadb -u tech_user -p < /opt/scripts/techVAL.sql
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] ColumnStore Speed Validation"

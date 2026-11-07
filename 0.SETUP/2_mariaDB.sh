@@ -19,7 +19,7 @@ apt-get update -y
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing MariaDB server..."
 echo "==================================================================="
-apt-get install -y mariadb-server mariadb-client 
+apt-get install -y mariadb-server mariadb-client mariadb-plugin-columnstore
 
 # Clean apt cache to free disk space immediately
 apt-get clean

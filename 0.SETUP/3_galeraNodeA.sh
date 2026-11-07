@@ -9,7 +9,7 @@ echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Galera Setup..."
 echo "==================================================================="
 
-apt-get install -y mariadb-backup mariadb-common mariadb-server-galera galera-4 libmariadb3 mariadb-plugin-columnstore
+apt-get install -y mariadb-backup mariadb-common mariadb-server-galera galera-4 libmariadb3
 
 read -p "Enter IP addresses for all nodes : " ip_addresses
 
