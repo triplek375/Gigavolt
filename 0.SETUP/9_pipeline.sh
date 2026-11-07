@@ -76,6 +76,11 @@ echo "==================================================================="
 
 python3 /opt/scripts/vector_db.py --db-path /opt/undata/gigavolt_vectordb --populate-from-embeddings /opt/undata/gigavolt_embeddings --M 32 --ef-construction 100 --ef-search 40
 
+echo "==================================================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] MongoDB Scripts"
+echo "==================================================================="
+
+bash /opt/scripts/import_and_index.sh
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Data Definition and Loading Complete!"
