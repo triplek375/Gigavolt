@@ -79,13 +79,14 @@ class SQLEquipmentRetriever:
     def __init__(self, connection_url: Optional[str] = None):
         self.connection_url = connection_url or os.getenv("MYSQL_URI")
         self._engine: Optional[Engine] = None
+        self._connect_failed = False
 
     def get_engine(self) -> Optional[Engine]:
         """Lazy initialize SQLAlchemy engine with socket and TCP fallbacks."""
         if self._engine is not None:
             return self._engine
 
-        if create_engine is None:
+        if create_engine is None or self._connect_failed:
             return None
 
         candidate_urls = []
@@ -99,7 +100,7 @@ class SQLEquipmentRetriever:
 
         for url in candidate_urls:
             try:
-                engine = create_engine(url, pool_pre_ping=True, connect_args={"connect_timeout": 3})
+                engine = create_engine(url, pool_pre_ping=True, connect_args={"connect_timeout": 1})
                 with engine.connect() as conn:
                     conn.execute(text("SELECT 1"))
                 logger.info(f"Connected to SQL Database via {url.split('@')[0]}@...")
@@ -109,11 +110,13 @@ class SQLEquipmentRetriever:
                 logger.debug(f"Connection attempt to {url} failed: {e}")
 
         logger.warning("Could not establish connection to MariaDB/MySQL database. SQL retrieval will return empty/mock results.")
+        self._connect_failed = True
         return None
 
     def query_equipment_metadata(
         self,
         equipment_id: Optional[str] = None,
+        serial_number: Optional[str] = None,
         model_name: Optional[str] = None,
         warranty_status: Optional[str] = None,  # 'ACTIVE', 'EXPIRED', or None
         limit: int = 10
@@ -132,6 +135,10 @@ class SQLEquipmentRetriever:
         if equipment_id:
             conditions.append("e.equipment_id = :equipment_id")
             params["equipment_id"] = equipment_id
+
+        if serial_number:
+            conditions.append("e.serial_number = :serial_number")
+            params["serial_number"] = serial_number
 
         if model_name:
             conditions.append("em.model_name LIKE :model_name")
@@ -193,18 +200,30 @@ class SQLEquipmentRetriever:
 
     def query_warranty_claims(
         self,
-        equipment_id: str,
+        equipment_id: Optional[str] = None,
+        serial_number: Optional[str] = None,
         limit: int = 10
     ) -> List[Dict[str, Any]]:
         """
-        Query warranty claims history for a given equipment ID.
-        Uses tables: warrantyClaims, claimStatus, parts.
+        Query warranty claims history for a given equipment ID or serial number.
+        Uses tables: warrantyClaims, equipment, claimStatus, parts.
         """
         engine = self.get_engine()
-        if engine is None:
+        if engine is None or (not equipment_id and not serial_number):
             return []
 
-        sql = """
+        conditions = []
+        params = {"limit": limit}
+        if equipment_id:
+            conditions.append("wc.equipment_id = :equipment_id")
+            params["equipment_id"] = equipment_id
+        if serial_number:
+            conditions.append("e.serial_number = :serial_number")
+            params["serial_number"] = serial_number
+
+        where_expr = " OR ".join(conditions)
+
+        sql = f"""
             SELECT 
                 wc.claim_id,
                 wc.equipment_id,
@@ -217,9 +236,10 @@ class SQLEquipmentRetriever:
                 COALESCE(wc.claim_context, '') AS claim_context,
                 COALESCE(p.part_name, 'N/A') AS part_name
             FROM warrantyClaims wc
+            LEFT JOIN equipment e ON wc.equipment_id = e.equipment_id
             LEFT JOIN claimStatus cs ON wc.status_id = cs.status_id
             LEFT JOIN parts p ON wc.part_id = p.part_id
-            WHERE wc.equipment_id = :equipment_id
+            WHERE {where_expr}
             ORDER BY wc.claim_date DESC
             LIMIT :limit
         """
@@ -227,7 +247,7 @@ class SQLEquipmentRetriever:
         claims = []
         try:
             with engine.connect() as conn:
-                rows = conn.execute(text(sql), {"equipment_id": equipment_id, "limit": limit}).mappings().fetchall()
+                rows = conn.execute(text(sql), params).mappings().fetchall()
                 for row in rows:
                     item = dict(row)
                     for k, v in item.items():
@@ -237,7 +257,7 @@ class SQLEquipmentRetriever:
                             item[k] = float(v)
                     claims.append(item)
         except Exception as e:
-            logger.error(f"Error querying warranty claims for {equipment_id}: {e}")
+            logger.error(f"Error querying warranty claims for {equipment_id or serial_number}: {e}")
 
         return claims
 
@@ -262,20 +282,22 @@ class MongoTelemetryRetriever:
     def __init__(self, uri: Optional[str] = None):
         self.uri = uri or os.getenv("MONGO_URI", self.DEFAULT_MONGO_URI)
         self._client: Optional[MongoClient] = None
+        self._connect_failed = False
 
     def get_collection(self):
         """Lazy initialize MongoDB client and return telemetry collection."""
-        if MongoClient is None:
+        if MongoClient is None or self._connect_failed:
             return None
 
         if self._client is None:
             try:
-                self._client = MongoClient(self.uri, serverSelectionTimeoutMS=2000)
+                self._client = MongoClient(self.uri, serverSelectionTimeoutMS=800)
                 self._client.admin.command("ping")
                 logger.info(f"Connected to MongoDB at {self.uri}")
             except Exception as e:
                 logger.warning(f"Could not connect to MongoDB at {self.uri}: {e}")
                 self._client = None
+                self._connect_failed = True
                 return None
 
         return self._client[self.DB_NAME][self.COLLECTION_NAME]
@@ -492,6 +514,8 @@ class HybridRetrievalPipeline:
         self,
         query: str,
         equipment_id: Optional[str] = None,
+        serial_number: Optional[str] = None,
+        model_name: Optional[str] = None,
         warranty_status: Optional[str] = None,
         fault_code: Optional[Union[str, List[str]]] = None,
         doc_type: Optional[str] = None,
@@ -504,6 +528,8 @@ class HybridRetrievalPipeline:
         Args:
             query: Natural language search query or symptom description.
             equipment_id: Optional equipment identifier (e.g. 'EQ-1001').
+            serial_number: Optional serial number identifier (e.g. 'SN-4829').
+            model_name: Optional equipment model name filter (e.g. 'Model X-7000').
             warranty_status: Optional filter ('ACTIVE', 'EXPIRED', or None).
             fault_code: Optional telemetry fault code filter (e.g. 'ERR_BMS_701').
             doc_type: Optional documentation type ('INC', 'MAN', 'SOP', 'ECO', 'SPEC').
@@ -514,19 +540,24 @@ class HybridRetrievalPipeline:
             Dictionary containing combined context from SQL, Vector DB, and MongoDB,
             along with a pre-formatted unified prompt context string.
         """
-        logger.info(f"Executing hybrid retrieval pipeline for query='{query}', equipment_id={equipment_id}...")
+        logger.info(f"Executing hybrid retrieval pipeline for query='{query}', equipment_id={equipment_id}, serial_number={serial_number}...")
 
         # 1. SQL: Fetch Equipment Metadata & Warranty Status
         equipment_list = []
         warranty_claims = []
-        if equipment_id:
+        if equipment_id or serial_number or model_name:
             equipment_list = self.sql_retriever.query_equipment_metadata(
                 equipment_id=equipment_id,
+                serial_number=serial_number,
+                model_name=model_name,
                 warranty_status=warranty_status,
-                limit=1
+                limit=1 if (equipment_id or serial_number) else 5
             )
+            # If resolved to a specific unit, bind equipment_id for claims & telemetry
+            target_eq_id = equipment_id or (equipment_list[0].get("equipment_id") if equipment_list else None)
             warranty_claims = self.sql_retriever.query_warranty_claims(
-                equipment_id=equipment_id,
+                equipment_id=target_eq_id,
+                serial_number=serial_number,
                 limit=5
             )
         else:
@@ -534,16 +565,17 @@ class HybridRetrievalPipeline:
                 warranty_status=warranty_status,
                 limit=5
             )
+            target_eq_id = None
 
         # 2. MongoDB: Fetch IoT Telemetry Patterns & Diagnostics
         telemetry_events = self.telemetry_retriever.query_telemetry_patterns(
-            equipment_id=equipment_id,
+            equipment_id=target_eq_id or equipment_id,
             fault_code=fault_code,
             include_battery_anomalies=True,
             limit=n_telemetry
         )
         telemetry_summary = self.telemetry_retriever.aggregate_fault_summary(
-            equipment_id=equipment_id,
+            equipment_id=target_eq_id or equipment_id,
             fault_codes=[fault_code] if isinstance(fault_code, str) else fault_code
         )
 
@@ -562,7 +594,8 @@ class HybridRetrievalPipeline:
         unified_result = {
             "query": query,
             "augmented_query": augmented_query,
-            "equipment_id": equipment_id,
+            "equipment_id": target_eq_id or equipment_id,
+            "serial_number": serial_number,
             "retrieval_timestamp": datetime.now(timezone.utc).isoformat(),
             "sources": {
                 "sql_equipment": equipment_list,
@@ -675,6 +708,8 @@ class HybridRetrievalPipeline:
 def hybrid_retrieval(
     query: str,
     equipment_id: Optional[str] = None,
+    serial_number: Optional[str] = None,
+    model_name: Optional[str] = None,
     warranty_status: Optional[str] = None,
     fault_code: Optional[Union[str, List[str]]] = None,
     doc_type: Optional[str] = None,
@@ -700,6 +735,8 @@ def hybrid_retrieval(
     return pipeline.retrieve(
         query=query,
         equipment_id=equipment_id,
+        serial_number=serial_number,
+        model_name=model_name,
         warranty_status=warranty_status,
         fault_code=fault_code,
         doc_type=doc_type,

@@ -19,3 +19,8 @@ ollama pull phi
 
 # Test locally
 ollama run phi "Howdy, who the heck are you?"
+
+systemctl status ollama --no-pager || systemctl start ollama
+
+echo "Testing Ollama API ping..."
+curl -s http://localhost:11434/api/tags | grep -q "models" && echo "Ollama server is active and responding." || echo "Ollama starting..."
