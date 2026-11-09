@@ -280,7 +280,7 @@ class LLMClient:
         backend: str = "auto",
         model: str = "phi",
         ollama_url: str = "http://localhost:11434",
-        timeout: int = 45
+        timeout: int = 120
     ):
         self.backend = backend.lower()
         self.model = model
@@ -318,29 +318,50 @@ class LLMClient:
         except Exception:
             return False
 
-    def generate(self, system_prompt: str, user_prompt: str, retrieval_result: Optional[Dict[str, Any]] = None) -> str:
+    def generate(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        retrieval_result: Optional[Dict[str, Any]] = None,
+        stream_output: bool = False
+    ) -> str:
         """Dispatches generation request to active backend."""
         backend = self._active_backend
 
         if backend == "ollama":
-            return self._generate_ollama(system_prompt, user_prompt)
+            return self._generate_ollama(system_prompt, user_prompt, retrieval_result, stream_output=stream_output)
         elif backend == "openai":
-            return self._generate_openai(system_prompt, user_prompt)
+            ans = self._generate_openai(system_prompt, user_prompt)
+            if stream_output:
+                print(ans, flush=True)
+            return ans
         elif backend == "anthropic":
-            return self._generate_anthropic(system_prompt, user_prompt)
+            ans = self._generate_anthropic(system_prompt, user_prompt)
+            if stream_output:
+                print(ans, flush=True)
+            return ans
         else:
-            return self._generate_grounded_mock(system_prompt, user_prompt, retrieval_result or {})
+            ans = self._generate_grounded_mock(system_prompt, user_prompt, retrieval_result or {})
+            if stream_output:
+                print(ans, flush=True)
+            return ans
 
-    def _generate_ollama(self, system_prompt: str, user_prompt: str) -> str:
-        """Generates response via Ollama HTTP API."""
+    def _generate_ollama(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        retrieval_result: Optional[Dict[str, Any]] = None,
+        stream_output: bool = False
+    ) -> str:
+        """Generates response via Ollama HTTP API with live token streaming."""
         payload = {
             "model": self.model,
             "prompt": f"{system_prompt}\n\n{user_prompt}",
-            "stream": False,
+            "stream": True,
             "options": {
                 "temperature": 0.2,
                 "top_p": 0.9,
-                "num_predict": 700
+                "num_predict": 250
             }
         }
         url = f"{self.ollama_url}/api/generate"
@@ -350,13 +371,29 @@ class LLMClient:
             headers={"Content-Type": "application/json"},
             method="POST"
         )
+        chunks = []
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                return data.get("response", "").strip()
+                for raw_line in resp:
+                    if not raw_line:
+                        continue
+                    data = json.loads(raw_line.decode("utf-8"))
+                    token = data.get("response", "")
+                    if token:
+                        chunks.append(token)
+                        if stream_output:
+                            print(token, end="", flush=True)
+                    if data.get("done"):
+                        break
+            if stream_output:
+                print()  # Final newline after streaming completes
+            return "".join(chunks).strip()
         except Exception as e:
             logger.warning(f"Ollama generation failed ({e}); falling back to Grounded Deterministic Engine.")
-            return self._generate_grounded_mock(system_prompt, user_prompt, {})
+            fallback_ans = self._generate_grounded_mock(system_prompt, user_prompt, retrieval_result or {})
+            if stream_output and not chunks:
+                print(fallback_ans, flush=True)
+            return fallback_ans
 
     def _generate_openai(self, system_prompt: str, user_prompt: str) -> str:
         """Generates response via OpenAI API."""
@@ -653,7 +690,8 @@ class GigavoltRAGPipeline:
         fault_code: Optional[Union[str, List[str]]] = None,
         doc_type: Optional[str] = None,
         n_docs: int = 4,
-        n_telemetry: int = 6
+        n_telemetry: int = 6,
+        stream_output: bool = False
     ) -> Dict[str, Any]:
         """
         Executes complete RAG pipeline with comprehensive latency profiling.
@@ -668,6 +706,16 @@ class GigavoltRAGPipeline:
         eff_fault_code = fault_code or parsed_intent["fault_code"]
         eff_doc_type = doc_type or parsed_intent["doc_type"]
         eff_warranty_status = warranty_status or parsed_intent["warranty_status"]
+
+        routed_params = {
+            "equipment_id": eff_equipment_id,
+            "serial_number": eff_serial_number,
+            "model_name": eff_model_name,
+            "fault_code": eff_fault_code,
+            "doc_type": eff_doc_type,
+            "warranty_status": eff_warranty_status,
+            "intent": parsed_intent["intent"]
+        }
 
         # Step 2: Hybrid Multi-Source Retrieval
         start_retrieval = time.perf_counter()
@@ -695,9 +743,23 @@ class GigavoltRAGPipeline:
         system_prompt, user_prompt = build_rag_prompt(query, retrieval_result)
         assembly_latency_ms = round((time.perf_counter() - start_assembly) * 1000, 2)
 
-        # Step 4: LLM Answer Generation
+        # Print header immediately before generation starts if streaming
+        if stream_output:
+            print("\n" + "=" * 80)
+            print(" GIGAVOLT END-TO-END RAG RESPONSE")
+            print("=" * 80)
+            print(f"Query: {query}")
+            print(f"Routed Parameters: {json.dumps(routed_params)}")
+            print("-" * 80, flush=True)
+
+        # Step 4: LLM Answer Generation (streams tokens live if stream_output=True)
         start_gen = time.perf_counter()
-        generated_answer = self.llm_client.generate(system_prompt, user_prompt, retrieval_result)
+        generated_answer = self.llm_client.generate(
+            system_prompt,
+            user_prompt,
+            retrieval_result,
+            stream_output=stream_output
+        )
         generation_latency_ms = round((time.perf_counter() - start_gen) * 1000, 2)
 
         # Step 5: Provenance & Citation Tracking
@@ -708,15 +770,7 @@ class GigavoltRAGPipeline:
 
         return {
             "query": query,
-            "routed_parameters": {
-                "equipment_id": eff_equipment_id,
-                "serial_number": eff_serial_number,
-                "model_name": eff_model_name,
-                "fault_code": eff_fault_code,
-                "doc_type": eff_doc_type,
-                "warranty_status": eff_warranty_status,
-                "intent": parsed_intent["intent"]
-            },
+            "routed_parameters": routed_params,
             "retrieval": retrieval_result,
             "prompts": {
                 "system_prompt": system_prompt,
@@ -733,7 +787,6 @@ class GigavoltRAGPipeline:
                 "active_llm_backend": self.llm_client._active_backend
             }
         }
-
 
 # ============================================================================
 # 6. CONVENIENCE FUNCTION & CLI
@@ -807,19 +860,13 @@ def main():
         query=args.query,
         equipment_id=args.equipment_id,
         serial_number=args.serial_number,
-        model_name=args.model_name
+        model_name=args.model_name,
+        stream_output=(not args.json)
     )
 
     if args.json:
         print(json.dumps(result, indent=2))
     else:
-        print("\n" + "=" * 80)
-        print(" GIGAVOLT END-TO-END RAG RESPONSE")
-        print("=" * 80)
-        print(f"Query: {result['query']}")
-        print(f"Routed Parameters: {json.dumps(result['routed_parameters'])}")
-        print("-" * 80)
-        print(result["answer"])
         print("\n" + "=" * 80)
         print(" PROVENANCE & LATENCY AUDIT")
         print("=" * 80)
@@ -832,7 +879,6 @@ def main():
         print(f"• LLM Generation:        {lat['generation_latency_ms']} ms (Backend: {lat['active_llm_backend']})")
         print(f"• End-to-End Latency:    {lat['total_latency_ms']} ms (Sub-5s Target Met: {lat['sub_5s_target_met']})")
         print("=" * 80 + "\n")
-
 
 if __name__ == "__main__":
     main()
