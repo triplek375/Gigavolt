@@ -10,7 +10,7 @@ This repository synthesizes the complete data engineering lifecycle across six a
 3. **Hybrid Transactional/Analytical Processing (InnoDB + ColumnStore OLAP):** Row-oriented `InnoDB` handles ACID transactions, RBAC masked views (`vw_customers_operational`), and immutable JSON audit triggers (`Audit_Logs`), while columnar `MariaDB ColumnStore` (`dispatches_cs_large`) accelerates fleet-wide statistical aggregations (`STDDEV_POP`, `VARIANCE`, `SUM(POWER())`).
 4. **Document NoSQL for High-Velocity IoT Telemetry (MongoDB):** Ingests semi-structured BESS sensor streams (`sensorDB.telemetry`) with compound indexing (`{equipment_id: 1, fault_code: 1, timestamp: -1}`) to isolate thermal runaway (`ERR_BMS_701`), deep discharge (`ERR_BMS_705`), contactor resistance (`ERR_BMS_708`), and DC-bus overvoltage (`ERR_VOLT_102`) anomalies in single-digit milliseconds.
 5. **Dense Vector Search over Technical Documentation (ChromaDB + HNSW):** Splits engineering PDFs (SOPs, Incident Reports, ECOs, Manuals, Datasheets) using a sentence-boundary-aware sliding window (`chunk_size=256`, `overlap=64`), encodes L2-normalized 384-dimensional embeddings (`all-MiniLM-L6-v2`), and indexes them in ChromaDB using Hierarchical Navigable Small World (HNSW) graphs (`M=32`, `ef_construction=100`, `ef_search=40`) for sub-20ms semantic retrieval.
-6. **Automated DAG Orchestration & Grounded RAG (`pipeline_dag.py`, `rag_pipeline.py`):** A pure-Python Directed Acyclic Graph (DAG) detects file-level SHA-256 deltas, enforces pre-load data validation, performs incremental upserts across MariaDB, MongoDB, and ChromaDB, recovers automatically from service interruptions with exponential backoff, and powers a parallel, LRU+TTL cached RAG engine backed by local **Ollama (`phi`)** with **100% 5-field source provenance traceability**.
+6. **Automated DAG Orchestration & Grounded RAG (`pipeline_dag.py`, `rag_pipeline.py`):** A pure-Python Directed Acyclic Graph (DAG) detects file-level SHA-256 deltas, enforces pre-load data validation, performs incremental upserts across MariaDB, MongoDB, and ChromaDB, recovers automatically from service interruptions with exponential backoff, and powers a parallel, LRU+TTL cached RAG engine backed by local **Ollama (`qwen2.5:0.5b`)** with **100% 5-field source provenance traceability**.
 
 ---
 
@@ -50,7 +50,7 @@ flowchart TB
         ROUTER["Intelligent Query Router\n(Regex Entity & Intent Extractor)"]
         CACHE["Thread-Safe LRU + TTL Cache\n(Embeddings, Retrieval & LLM Responses)"]
         EXECUTOR["Parallel ThreadPoolExecutor\n(Concurrent SQL + Mongo + Vector Fetch)"]
-        OLLAMA["Local Ollama LLM Server (phi)\n(CPU Keep-Alive=24h, Compact Prompt)"]
+        OLLAMA["Local Ollama LLM Server (qwen2.5:0.5b)\n(CPU Keep-Alive=24h, Compact Prompt)"]
         PROVENANCE["Automated 5-Field Provenance Auditor\n[db_type | record_id | doc | chunk_id | ts]"]
     end
 
@@ -81,7 +81,7 @@ flowchart TB
 
 ## 3. End-to-End Data Flow (Ingestion to Answer Generation)
 
-1. **Automated Delta Detection (`task_1_detect_new_data`):** `pipeline_dag.py` computes SHA-256 cryptographic hashes of all files in `/opt/data/*.csv`, `/opt/undata/telemetry_data.json`, and `/opt/undata/*.pdf`, comparing them against `/opt/undata/pipeline_manifest.json`. Unchanged files are bypassed to prevent redundant I/O and re-embedding.
+1. **Automated Delta Detection (`task_1_detect_new_data`):** `pipeline_dag.py` computes SHA-256 cryptograqwen2.5:0.5bc hashes of all files in `/opt/data/*.csv`, `/opt/undata/telemetry_data.json`, and `/opt/undata/*.pdf`, comparing them against `/opt/undata/pipeline_manifest.json`. Unchanged files are bypassed to prevent redundant I/O and re-embedding.
 2. **Pre-Load Cleansing & Validation (`task_2_cleanse_and_validate`):** Modified CSVs and JSON streams are inspected before database loading. The gate verifies required primary key columns (`customer_id`, `equipment_id`, `dispatch_id`, `part_id`, `claim_id`), rejects null identifiers, and validates JSON syntax, ensuring **zero data integrity errors**.
 3. **Incremental Relational Loading & Index Tuning (`task_3_load_relational_db`):**
    * Changed CSVs load into `bronze_*` tables.
@@ -93,7 +93,7 @@ flowchart TB
 7. **Parallel Hybrid Retrieval & Grounded Ollama Generation (`rag_pipeline.py`):**
    * **Intent Routing:** Extracts `equipment_id`, `serial_number`, `model_name`, `fault_code`, `warranty_status`, and `doc_type` from the user's natural language prompt.
    * **Concurrent Retrieval:** A `ThreadPoolExecutor` queries MariaDB (equipment + claims + dispatches), MongoDB (telemetry events + fault aggregations), and ChromaDB (top-$k$ HNSW chunks) concurrently.
-   * **CPU-Optimized Ollama Inference:** Assembles a high-signal prompt and invokes local Ollama (`phi`) kept warm in RAM (`keep_alive="24h"`).
+   * **CPU-Optimized Ollama Inference:** Assembles a high-signal prompt and invokes local Ollama (`qwen2.5:0.5b`) kept warm in RAM (`keep_alive="24h"`).
    * **Provenance Audit:** `ProvenanceTracker` verifies every factual statement against retrieved records and binds standardized 5-field citations: `[database_type | record_id=... | doc=... | chunk_id=... | ts=...]`.
 
 ---
@@ -106,7 +106,7 @@ flowchart TB
 | **Relational vs. Analytical Storage** | Hybrid MariaDB `InnoDB` (OLTP) + `ColumnStore` (OLAP) | Single-engine InnoDB | **Trade-Off:** InnoDB row-level locking and foreign keys are ideal for transactional Silver upserts and audit triggers, but full-table scans for fleet variance/standard deviation degrade at scale. Dual-loading analytical tables into `ColumnStore` trades extra disk space for vectorized columnar projection speedups. |
 | **Distributed SQL High Availability** | MariaDB Galera Multi-Primary Cluster (`wsrep`) | Asynchronous Primary-Replica | **Trade-Off:** Galera guarantees zero data loss (RPO=0) and synchronous reads/writes across nodes, trading slightly higher write commit latency (certification round-trip) and requiring explicit `grastate.dat` sequence tracking (`4_galeraStartup.sh`) after ungraceful shutdowns. |
 | **Vector Indexing (ChromaDB HNSW)** | Embedded ChromaDB with `M=32, ef_construction=100, ef_search=40` | Flat Exact Search (`IndexFlatIP`) or `ef_search=150` | **Trade-Off:** Tuning `ef_search=40` with `M=32` achieves **100% Top-5 recall** relative to `ef_search=128` while keeping pure vector lookup latency under **2.5 ms (P95)**—well below the 20 ms SLA. |
-| **LLM Inference & Latency Optimization** | Local Ollama (`phi`) + `keep_alive=24h` + `ThreadPoolExecutor` + `LRUTTLCache` | Uncached Sequential Retrieval with Large Context Windows | **Trade-Off:** CPU-only LLM inference is compute-bound (~40–60 ms/token). By parallelizing the 3 database queries, compacting prompt context to high-signal fields, pinning `phi` weights in RAM, and caching frequent operational queries, median end-to-end latency drops well below the **5.0-second SLA**. |
+| **LLM Inference & Latency Optimization** | Local Ollama (`qwen2.5:0.5b`) + `keep_alive=24h` + `ThreadPoolExecutor` + `LRUTTLCache` | Uncached Sequential Retrieval with Large Context Windows | **Trade-Off:** CPU-only LLM inference is compute-bound (~40–60 ms/token). By parallelizing the 3 database queries, compacting prompt context to high-signal fields, pinning `qwen2.5:0.5b` weights in RAM, and caching frequent operational queries, median end-to-end latency drops well below the **5.0-second SLA**. |
 
 ---
 
@@ -126,7 +126,7 @@ Gigavolt/
 │   ├── 4_galeraStartup.sh           # Automated grastate.dat crash recovery script
 │   ├── 5_mongoDB.sh                 # Installs MongoDB 7.0 & pymongo
 │   ├── 6_vectorDB.sh                # Installs CPU PyTorch, ChromaDB & SentenceTransformers
-│   ├── 7_ollama.sh                  # Installs Ollama, configures systemd keep-alive & pulls phi
+│   ├── 7_ollama.sh                  # Installs Ollama, configures systemd keep-alive & pulls qwen2.5:0.5b
 │   ├── 9_pipeline.sh                # Executes end-to-end DDL/DML, indexing & DAG initialization
 │   └── 10_validation.sh             # Executes full validation, DAG test & 24-query benchmark
 ├── 1.BRONZE/
@@ -180,7 +180,7 @@ Gigavolt/
    ```bash
    tail -f /var/log/user-data.log
    ```
-   `init.sh` automatically provisions Python virtual environments (`/opt/venv`), installs MariaDB 12.3, MongoDB 7.0, ChromaDB, and Ollama (`phi`), executes `9_pipeline.sh` to build and index all databases, and runs `10_validation.sh` to generate `/opt/scripts/BENCHMARK_REPORT.md`.
+   `init.sh` automatically provisions Python virtual environments (`/opt/venv`), installs MariaDB 12.3, MongoDB 7.0, ChromaDB, and Ollama (`qwen2.5:0.5b`), executes `9_pipeline.sh` to build and index all databases, and runs `10_validation.sh` to generate `/opt/scripts/BENCHMARK_REPORT.md`.
 
 ### Manual CLI Execution Commands (Post-SSH)
 ```bash
@@ -200,5 +200,5 @@ python3 /opt/scripts/pipeline_dag.py --simulate-failure
 python3 /opt/scripts/rag_pipeline.py --query "Correlate active warranty status for unit EQ-1001 with ERR_BMS_701 telemetry alerts and emergency shutdown SOPs."
 
 # 5. Execute the Complete 24-Prompt Benchmark & Generate BENCHMARK_REPORT.md
-python3 /opt/scripts/ragVAL.py --model phi --report-out /opt/scripts/BENCHMARK_REPORT.md
+python3 /opt/scripts/ragVAL.py --model qwen2.5:0.5b --report-out /opt/scripts/BENCHMARK_REPORT.md
 ```

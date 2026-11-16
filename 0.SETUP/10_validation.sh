@@ -55,7 +55,7 @@ python3 /opt/scripts/pipeline_dag.py --simulate-new-data
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] 24-Prompt RAG Latency, Optimization & Provenance Suite"
 echo "==================================================================="
-python3 /opt/scripts/ragVAL.py --model phi --report-out /opt/scripts/BENCHMARK_REPORT.md
+python3 /opt/scripts/ragVAL.py --model qwen2.5:0.5b --report-out /opt/scripts/BENCHMARK_REPORT.md
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validation & Benchmarking Complete!"

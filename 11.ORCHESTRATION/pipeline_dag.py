@@ -561,7 +561,7 @@ def main():
         try:
             from rag_pipeline import GigavoltRAGPipeline
             print("\n[LIVE VERIFICATION] Querying newly ingested unit EQ-9999 / SN-9999 via Ollama RAG...")
-            rag = GigavoltRAGPipeline(backend="ollama", model="phi")
+            rag = GigavoltRAGPipeline(backend="ollama", model="qwen2.5:0.5b")
             res = rag.run("Show me service history, telemetry alerts, and warranty claims for unit EQ-9999 (SN-9999)")
             print(res["answer"])
         except Exception as e:

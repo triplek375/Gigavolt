@@ -37,10 +37,10 @@ for i in {1..15}; do
     sleep 2
 done
 
-# Pull phi model and pre-warm into memory with 24h keep_alive and 512 context window
-ollama pull phi
+# Pull qwen2.5:0.5b model and pre-warm into memory with 24h keep_alive and 512 context window
+ollama pull qwen2.5:0.5b
 curl -s http://localhost:11434/api/generate -d '{
-  "model": "phi",
+  "model": "qwen2.5:0.5b",
   "prompt": "System check: respond OK.",
   "stream": false,
   "keep_alive": "24h",

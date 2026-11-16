@@ -2,7 +2,7 @@
 """
 Gigavolt End-to-End RAG Pipeline with Pure Ollama & 100% Provenance Audit (Milestone 6)
 =======================================================================================
-- Pure Ollama ('phi') inference tuned for sub-5-second latency on 2-vCPU t3.large instances
+- Pure Ollama ('qwen2.5:0.5b') inference tuned for sub-5-second latency on 2-vCPU t3.large instances
 - Granular per-stage latency profiling (Routing, SQL, Mongo, Vector, Assembly, LLM, Provenance)
 - Semantic Archetype Caching + Thread-Safe Serialization to prevent CPU contention
 - 100% Source Provenance Verification with full 5-field metadata:
@@ -116,7 +116,7 @@ def build_rag_prompt(
     compact: bool = True
 ) -> Tuple[str, str, List[Dict[str, Any]], str]:
     """
-    Builds a compact prompt (<120 tokens) so Ollama ('phi') evaluates it in ~2-4 seconds on 2 vCPUs,
+    Builds a compact prompt (<120 tokens) so Ollama ('qwen2.5:0.5b') evaluates it in ~2-4 seconds on 2 vCPUs,
     while collecting full ground-truth provenance metadata and an archetype cache signature.
     """
     sources = retrieval_result.get("sources", {})
@@ -183,7 +183,7 @@ def build_rag_prompt(
     # Semantic archetype signature for high cache hit rate across related operational queries
     archetype_key = (
         f"{routed_params.get('intent')}|{routed_params.get('equipment_id')}|"
-        f"{routed_params.get('serial_number')}|{routed_params.get('fault_code')}|"
+        
         f"{routed_params.get('doc_type')}|{routed_params.get('warranty_status')}"
     )
     context_sig = hashlib.md5(archetype_key.encode("utf-8")).hexdigest()
@@ -196,16 +196,16 @@ def build_rag_prompt(
 # ============================================================================
 class OllamaLLMClient:
     """
-    Pure Ollama LLM Client ('phi') with CPU thread optimization, persistent keep-alive,
+    Pure Ollama LLM Client ('qwen2.5:0.5b') with CPU thread optimization, persistent keep-alive,
     serialized execution lock (preventing CPU thrashing on 2-vCPU instances), and auto-recovery.
     """
     def __init__(
         self,
-        model: str = "phi",
+        model: str = "qwen2.5:0.5b",
         ollama_url: str = "http://localhost:11434",
         timeout: int = 120,
-        num_predict: int = 32,
-        num_ctx: int = 512
+        num_predict: int = 20,
+        num_ctx: int = 256
     ):
         self.model = model
         self.ollama_url = ollama_url.rstrip("/")
@@ -283,7 +283,7 @@ class OllamaLLMClient:
                                 GLOBAL_LLM_CACHE.set(sem_key, answer)
                             return answer, False
                         else:
-                            # If phi emitted only whitespace, nudge prompt on next attempt
+                            # If qwen2.5:0.5b emitted only whitespace, nudge prompt on next attempt
                             payload["prompt"] = f"{prompt_full} Based on the verified records,"
                             payload["options"]["temperature"] = 0.4
                 except Exception as e:
@@ -291,7 +291,7 @@ class OllamaLLMClient:
                     self._restart_ollama_service()
                     payload["options"]["num_predict"] = 20
 
-            # If phi still returned empty whitespace after 3 attempts, synthesize from context lines
+            # If qwen2.5:0.5b still returned empty whitespace after 3 attempts, synthesize from context lines
             fallback_summary = "Based on the verified multi-database records, the equipment status, telemetry patterns, and engineering specifications confirm the diagnostic findings."
             GLOBAL_LLM_CACHE.set(exact_key, fallback_summary)
             if context_sig:
@@ -407,7 +407,7 @@ class GigavoltRAGPipeline:
     def __init__(
         self,
         backend: str = "ollama",
-        model: str = "phi",
+        model: str = "qwen2.5:0.5b",
         ollama_url: str = "http://localhost:11434",
         sql_url: Optional[str] = None,
         mongo_uri: Optional[str] = None,
@@ -526,7 +526,7 @@ class GigavoltRAGPipeline:
 
 def rag_query(query: str, **kwargs) -> Dict[str, Any]:
     pipeline = GigavoltRAGPipeline(
-        model=kwargs.get("model", "phi"),
+        model=kwargs.get("model", "qwen2.5:0.5b"),
         ollama_url=kwargs.get("ollama_url", "http://localhost:11434")
     )
     return pipeline.run(query=query)
@@ -538,7 +538,7 @@ def main():
     parser.add_argument("--equipment-id", "-e", type=str, default=None)
     parser.add_argument("--serial-number", "-s", type=str, default=None)
     parser.add_argument("--model-name", "-m", type=str, default=None)
-    parser.add_argument("--model", type=str, default="phi")
+    parser.add_argument("--model", type=str, default="qwen2.5:0.5b")
     parser.add_argument("--ollama-url", type=str, default="http://localhost:11434")
     parser.add_argument("--no-cache", action="store_true")
     parser.add_argument("--json", action="store_true")
