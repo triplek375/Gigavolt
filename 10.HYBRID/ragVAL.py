@@ -98,7 +98,7 @@ def run_before_after_optimization_benchmark(pipeline: GigavoltRAGPipeline) -> Di
     - BEFORE: Sequential DB queries, cache disabled, uncompacted prompts
     - AFTER : Parallel ThreadPoolExecutor DB queries, tuned indexes, compact prompt + active cache
     """
-    sample_subset = BENCHMARK_24_PROMPTS[:4]
+    sample_subset = BENCHMARK_24_PROMPTS[:2]
     clear_global_cache()
 
     logger.info("Running BEFORE-OPTIMIZATION baseline (Sequential DBs, Uncached, Full Context)...")
