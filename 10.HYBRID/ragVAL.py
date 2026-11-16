@@ -166,7 +166,7 @@ def run_comprehensive_24_benchmark(pipeline: GigavoltRAGPipeline) -> Dict[str, A
     print("=" * 85)
 
     # Pre-warm 10 representative operational queries into cache to model production workload
-    for item in BENCHMARK_24_PROMPTS[:10]:
+    for item in BENCHMARK_24_PROMPTS[:2]:
         pipeline.run(item["query"], use_cache=True, parallel_retrieval=True, compact_prompt=True)
 
     stage_series: Dict[str, List[float]] = {
