@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 """
-Gigavolt Incremental Silver ETL & Data Validation Engine
+Gigavolt Incremental Silver ETL & Data Validation Engine (Milestone 6)
 ======================================================================
 - Cleanses HTML, normalizes phone numbers, emails, dates, and status values.
 - Validates data integrity prior to loading (zero orphan FKs or null PKs).
@@ -13,7 +14,7 @@ import sys
 import json
 import logging
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import create_engine, text
 
 logging.basicConfig(
@@ -82,7 +83,7 @@ def insert_ignore_lookup(engine, table_name: str, df: pd.DataFrame, unique_cols:
 def upsert_dataframe(engine, table_name: str, df: pd.DataFrame, pk_cols: list) -> int:
     """
     Executes batch INSERT ... ON DUPLICATE KEY UPDATE for incremental Silver loading.
-    Avoids reprocessing unchanged rows by comparing against existing database state.
+    Strictly converts any NaN/NaT/pd.NA scalars to Python None for PyMySQL compatibility.
     """
     if df.empty:
         return 0
@@ -91,8 +92,12 @@ def upsert_dataframe(engine, table_name: str, df: pd.DataFrame, pk_cols: list) -
     if df_clean.empty:
         return 0
 
-    # Replace NaN/NaT with None for SQLAlchemy parameter binding
-    records = df_clean.where(pd.notnull(df_clean), None).to_dict(orient="records")
+    raw_records = df_clean.to_dict(orient="records")
+    records = [
+        {k: (None if pd.isna(v) else v) for k, v in row.items()}
+        for row in raw_records
+    ]
+
     cols = list(df_clean.columns)
     col_names = ", ".join([f"`{c}`" for c in cols])
     placeholders = ", ".join([f":{c}" for c in cols])
@@ -113,7 +118,7 @@ def upsert_dataframe(engine, table_name: str, df: pd.DataFrame, pk_cols: list) -
 def run_silver_etl() -> dict:
     engine = get_engine()
     metrics = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "domains": {},
         "integrity_errors": 0
     }
@@ -380,7 +385,7 @@ def run_silver_etl() -> dict:
     silver_claims = silver_claims[silver_claims["equipment_id"].isin(valid_equipment)]
     silver_claims.loc[~silver_claims["dispatch_id"].isin(valid_dispatches), "dispatch_id"] = None
     silver_claims.loc[~silver_claims["part_id"].isin(valid_parts), "part_id"] = None
-    silver_claims = silver_claims.drop_duplicates(subset=["claim_id"]).replace({"": None})
+    silver_claims = silver_claims.drop_duplicates(subset=["claim_id"])
 
     claims_upserted = upsert_dataframe(engine, "warrantyClaims", silver_claims, ["claim_id"])
     metrics["domains"]["warrantyClaims"] = {"bronze_rows": initial_claim_rows, "upserted": claims_upserted}

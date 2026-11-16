@@ -9,7 +9,7 @@ This repository synthesizes the complete data engineering lifecycle across six a
 2. **High-Availability Distributed SQL (MariaDB Galera Cluster):** Multi-primary synchronous replication (`3_galeraNodeA.sh`, `3_galeraOthers.sh`, `4_galeraStartup.sh`) using certification-based optimistic concurrency control (`wsrep_on=ON`) and automated `grastate.dat` sequence-number crash recovery.
 3. **Hybrid Transactional/Analytical Processing (InnoDB + ColumnStore OLAP):** Row-oriented `InnoDB` handles ACID transactions, RBAC masked views (`vw_customers_operational`), and immutable JSON audit triggers (`Audit_Logs`), while columnar `MariaDB ColumnStore` (`dispatches_cs_large`) accelerates fleet-wide statistical aggregations (`STDDEV_POP`, `VARIANCE`, `SUM(POWER())`).
 4. **Document NoSQL for High-Velocity IoT Telemetry (MongoDB):** Ingests semi-structured BESS sensor streams (`sensorDB.telemetry`) with compound indexing (`{equipment_id: 1, fault_code: 1, timestamp: -1}`) to isolate thermal runaway (`ERR_BMS_701`), deep discharge (`ERR_BMS_705`), contactor resistance (`ERR_BMS_708`), and DC-bus overvoltage (`ERR_VOLT_102`) anomalies in single-digit milliseconds.
-5. **Dense Vector Search over Technical Documentation (ChromaDB + HNSW):** Splits engineering PDFs (SOPs, Incident Reports, ECOs, Manuals, Datasheets) using a sentence-boundary-aware sliding window (`chunk_size=384`, `overlap=64`), encodes L2-normalized 384-dimensional embeddings (`all-MiniLM-L6-v2`), and indexes them in ChromaDB using Hierarchical Navigable Small World (HNSW) graphs (`M=32`, `ef_construction=100`, `ef_search=40`) for sub-20ms semantic retrieval.
+5. **Dense Vector Search over Technical Documentation (ChromaDB + HNSW):** Splits engineering PDFs (SOPs, Incident Reports, ECOs, Manuals, Datasheets) using a sentence-boundary-aware sliding window (`chunk_size=256`, `overlap=64`), encodes L2-normalized 384-dimensional embeddings (`all-MiniLM-L6-v2`), and indexes them in ChromaDB using Hierarchical Navigable Small World (HNSW) graphs (`M=32`, `ef_construction=100`, `ef_search=40`) for sub-20ms semantic retrieval.
 6. **Automated DAG Orchestration & Grounded RAG (`pipeline_dag.py`, `rag_pipeline.py`):** A pure-Python Directed Acyclic Graph (DAG) detects file-level SHA-256 deltas, enforces pre-load data validation, performs incremental upserts across MariaDB, MongoDB, and ChromaDB, recovers automatically from service interruptions with exponential backoff, and powers a parallel, LRU+TTL cached RAG engine backed by local **Ollama (`phi`)** with **100% 5-field source provenance traceability**.
 
 ---
@@ -40,7 +40,7 @@ flowchart TB
             MONGO_COLL["IoT Document Store\n(Compound Indexes: eq_id + fault + ts)"]
         end
         subgraph ChromaDB["ChromaDB Vector Store (HNSW)"]
-            CHUNKER["Sentence-Boundary Chunker\n(384 Tokens, 64 Overlap)"]
+            CHUNKER["Sentence-Boundary Chunker\n(256 Tokens, 64 Overlap)"]
             EMBED["SentenceTransformers\n(all-MiniLM-L6-v2, 384-d)"]
             HNSW["HNSW Index\n(M=32, ef_c=100, ef_s=40)"]
         end
@@ -155,7 +155,7 @@ Gigavolt/
 │   ├── colstoreDML.sql              # Bulk OLAP loader
 │   └── colstoreVAL.sql              # Analytical benchmark comparing InnoDB vs. ColumnStore
 ├── 7.VECTOR/
-│   ├── chunking_engine.py           # Sentence-boundary-aware PDF chunker (384 tok / 64 overlap)
+│   ├── chunking_engine.py           # Sentence-boundary-aware PDF chunker (256 tok / 64 overlap)
 │   ├── generate_embeddings.py       # Batch all-MiniLM-L6-v2 dense embedding generator
 │   └── vector_db.py                 # ChromaDB HNSW manager, incremental upsert & HNSW tuner
 ├── 8.JSON/

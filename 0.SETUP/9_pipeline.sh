@@ -56,7 +56,7 @@ mariadb < /opt/scripts/colstoreDML.sql
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Chunking Engine"
 echo "==================================================================="
-python3 /opt/scripts/chunking_engine.py --data-dir /opt/undata --chunk-size 384 --overlap 64 --output /opt/undata/gigavolt_chunks.json --stats
+python3 /opt/scripts/chunking_engine.py --data-dir /opt/undata --chunk-size 256 --overlap 64 --output /opt/undata/gigavolt_chunks.json --stats
 
 echo "==================================================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Generate Embeddings"

@@ -283,7 +283,7 @@ def main():
     parser.add_argument(
         "--chunk-size",
         type=int,
-        default=384,
+        default=256,
         help="Chunk size in tokens (if running direct chunking)"
     )
     parser.add_argument(

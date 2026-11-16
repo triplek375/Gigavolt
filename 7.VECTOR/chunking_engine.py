@@ -6,7 +6,7 @@ Splits Gigavolt technical documentation and service records into token-bounded,
 sentence-boundary-aware chunks with configurable overlapping context windows.
 
 Key Features:
-- Token-bounded chunking (configurable 256 - 512 tokens, default: 384)
+- Token-bounded chunking (configurable 256 - 512 tokens, default: 256)
 - Sentence-boundary awareness to avoid mid-sentence truncation
 - Context-preserving overlapping sliding windows (default: 64 tokens)
 - Handles technical abbreviations, decimals, and Gigavolt document codes
@@ -243,7 +243,7 @@ class DocumentChunker:
 
     def __init__(
         self,
-        chunk_size: int = 384,
+        chunk_size: int = 256,
         overlap: int = 64,
         min_chunk_size: int = 64,
         model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
@@ -537,7 +537,7 @@ def resolve_data_directory(user_specified: Optional[str] = None) -> Path:
 
 def process_directory(
     target_dir: Path,
-    chunk_size: int = 384,
+    chunk_size: int = 256,
     overlap: int = 64
 ) -> List[Dict[str, Any]]:
     """Process all PDF files in directory and return all chunks"""
@@ -620,7 +620,7 @@ def main():
     parser.add_argument(
         "--chunk-size",
         type=int,
-        default=384,
+        default=256,
         help="Maximum chunk size in tokens (recommended: 256-512)"
     )
     parser.add_argument(

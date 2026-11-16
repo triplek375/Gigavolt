@@ -369,7 +369,7 @@ def task_5_chunk_and_reindex_vector(ctx: Dict[str, Any]) -> Dict[str, Any]:
     from chunking_engine import DocumentChunker, parse_gigavolt_filename, extract_pages_from_pdf
     from vector_db import GigavoltVectorDB
 
-    chunker = DocumentChunker(chunk_size=384, overlap=64)
+    chunker = DocumentChunker(chunk_size=256, overlap=64)
     new_chunks = []
 
     target_pdfs = changed_pdfs if changed_pdfs else list(Path(ctx["undata_dir"]).glob("*.pdf"))
