@@ -81,7 +81,7 @@ flowchart TB
 
 ## 3. End-to-End Data Flow (Ingestion to Answer Generation)
 
-1. **Automated Delta Detection (`task_1_detect_new_data`):** `pipeline_dag.py` computes SHA-256 cryptograqwen2.5:0.5bc hashes of all files in `/opt/data/*.csv`, `/opt/undata/telemetry_data.json`, and `/opt/undata/*.pdf`, comparing them against `/opt/undata/pipeline_manifest.json`. Unchanged files are bypassed to prevent redundant I/O and re-embedding.
+1. **Automated Delta Detection (`task_1_detect_new_data`):** `pipeline_dag.py` computes SHA-256 cryptographic hashes of all files in `/opt/data/*.csv`, `/opt/undata/telemetry_data.json`, and `/opt/undata/*.pdf`, comparing them against `/opt/undata/pipeline_manifest.json`. Unchanged files are bypassed to prevent redundant I/O and re-embedding.
 2. **Pre-Load Cleansing & Validation (`task_2_cleanse_and_validate`):** Modified CSVs and JSON streams are inspected before database loading. The gate verifies required primary key columns (`customer_id`, `equipment_id`, `dispatch_id`, `part_id`, `claim_id`), rejects null identifiers, and validates JSON syntax, ensuring **zero data integrity errors**.
 3. **Incremental Relational Loading & Index Tuning (`task_3_load_relational_db`):**
    * Changed CSVs load into `bronze_*` tables.
