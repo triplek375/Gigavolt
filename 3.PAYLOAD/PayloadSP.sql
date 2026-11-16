@@ -1,14 +1,18 @@
-# =====================================================================
-# ADD STORED PROCEDURES FOR LLM CONTEXT
-# =====================================================================
+-- =====================================================================
+-- ADD STORED PROCEDURES FOR LLM CONTEXT & PROVENANCE STORE
+-- =====================================================================
 USE gigavolt_db;
 
 DROP TABLE IF EXISTS rag_payloads;
 CREATE TABLE rag_payloads (
     payload_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    record_id VARCHAR(100) NOT NULL,
     context_type VARCHAR(50) NOT NULL,
     payload_text LONGTEXT NOT NULL,
-    metadata JSON NOT NULL
+    metadata JSON NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_record_context (record_id, context_type),
+    INDEX idx_context_type (context_type)
 );
 
 DELIMITER //
@@ -23,12 +27,12 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RAG Payload generation failed. Transaction rolled back.';
     END;
 
-    TRUNCATE TABLE rag_payloads;
-
     START TRANSACTION;
 
-    INSERT INTO rag_payloads (context_type, payload_text, metadata)
+    -- 1. Upsert Dispatch Records with Full 5-Field Provenance Metadata
+    INSERT INTO rag_payloads (record_id, context_type, payload_text, metadata)
     SELECT
+        d.dispatch_id,
         'DISPATCH_RECORD',
         CONCAT(
             d.service_context, 
@@ -37,7 +41,11 @@ BEGIN
             '. Status: ', COALESCE(ds.status_name, 'Unknown')
         ),
         JSON_OBJECT(
-            'dispatch_id', d.dispatch_id,
+            'database_type', 'MariaDB',
+            'record_id', d.dispatch_id,
+            'document_name', 'gigavolt_db.dispatches',
+            'chunk_id', CONCAT('SQL_DISP_', d.dispatch_id),
+            'timestamp', COALESCE(CAST(d.dispatch_date AS CHAR), CAST(CURRENT_DATE AS CHAR)),
             'equipment_id', d.equipment_id,
             'technician_name', CONCAT(t.first_name, ' ', t.last_name),
             'service_type', st.service_type_name,
@@ -46,10 +54,16 @@ BEGIN
     FROM dispatches d
     LEFT JOIN technicians t ON d.technician_id = t.technician_id
     LEFT JOIN serviceTypes st ON d.service_type_id = st.service_type_id
-    LEFT JOIN dispatchStatus ds ON d.status_id = ds.status_id;
+    LEFT JOIN dispatchStatus ds ON d.status_id = ds.status_id
+    ON DUPLICATE KEY UPDATE
+        payload_text = VALUES(payload_text),
+        metadata = VALUES(metadata),
+        updated_at = CURRENT_TIMESTAMP;
 
-    INSERT INTO rag_payloads (context_type, payload_text, metadata)
+    -- 2. Upsert Warranty Claims with Full 5-Field Provenance Metadata
+    INSERT INTO rag_payloads (record_id, context_type, payload_text, metadata)
     SELECT
+        wc.claim_id,
         'WARRANTY_CLAIM',
         CONCAT(
             wc.claim_context,
@@ -57,7 +71,11 @@ BEGIN
             '. Status: ', COALESCE(cs.status_name, 'Unknown')
         ),
         JSON_OBJECT(
-            'claim_id', wc.claim_id,
+            'database_type', 'MariaDB',
+            'record_id', wc.claim_id,
+            'document_name', 'gigavolt_db.warrantyClaims',
+            'chunk_id', CONCAT('SQL_CLM_', wc.claim_id),
+            'timestamp', COALESCE(CAST(wc.claim_date AS CHAR), CAST(CURRENT_DATE AS CHAR)),
             'equipment_id', wc.equipment_id,
             'dispatch_id', wc.dispatch_id,
             'part_name', COALESCE(p.part_name, 'None'),
@@ -65,10 +83,16 @@ BEGIN
         )
     FROM warrantyClaims wc
     LEFT JOIN parts p ON wc.part_id = p.part_id
-    LEFT JOIN claimStatus cs ON wc.status_id = cs.status_id;
+    LEFT JOIN claimStatus cs ON wc.status_id = cs.status_id
+    ON DUPLICATE KEY UPDATE
+        payload_text = VALUES(payload_text),
+        metadata = VALUES(metadata),
+        updated_at = CURRENT_TIMESTAMP;
 
-    INSERT INTO rag_payloads (context_type, payload_text, metadata)
+    -- 3. Upsert Equipment Profiles with Full 5-Field Provenance Metadata
+    INSERT INTO rag_payloads (record_id, context_type, payload_text, metadata)
     SELECT
+        CONCAT(e.equipment_id, '_', e.status_id),
         'EQUIPMENT_PROFILE',
         CONCAT(
             e.equipment_context,
@@ -78,7 +102,13 @@ BEGIN
             '. Status: ', COALESCE(es.status_name, 'Unknown')
         ),
         JSON_OBJECT(
+            'database_type', 'MariaDB',
+            'record_id', e.equipment_id,
+            'document_name', 'gigavolt_db.equipment',
+            'chunk_id', CONCAT('SQL_EQ_', e.equipment_id),
+            'timestamp', COALESCE(CAST(e.install_date AS CHAR), CAST(CURRENT_DATE AS CHAR)),
             'equipment_id', e.equipment_id,
+            'serial_number', e.serial_number,
             'customer_name', CONCAT(c.first_name, ' ', c.last_name),
             'model_name', em.model_name,
             'equipment_status', es.status_name
@@ -86,10 +116,13 @@ BEGIN
     FROM equipment e
     LEFT JOIN customers c ON e.customer_id = c.customer_id
     LEFT JOIN equipmentModels em ON e.model_id = em.model_id
-    LEFT JOIN equipmentStatus es ON e.status_id = es.status_id;
+    LEFT JOIN equipmentStatus es ON e.status_id = es.status_id
+    ON DUPLICATE KEY UPDATE
+        payload_text = VALUES(payload_text),
+        metadata = VALUES(metadata),
+        updated_at = CURRENT_TIMESTAMP;
 
     COMMIT;
-
 END //
 
 DELIMITER ;
