@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Gigavolt Incremental Silver ETL & Data Validation Engine (Milestone 6)
+Gigavolt Incremental Silver ETL & Data Validation Engine
 ======================================================================
 - Cleanses HTML, normalizes phone numbers, emails, dates, and status values.
 - Validates data integrity prior to loading (zero orphan FKs or null PKs).

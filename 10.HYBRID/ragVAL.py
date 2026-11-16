@@ -161,7 +161,7 @@ def run_comprehensive_24_benchmark(pipeline: GigavoltRAGPipeline) -> Dict[str, A
     while executing remaining queries live against Ollama ('qwen2.5:0.5b').
     """
     print("\n" + "=" * 85)
-    print(" GIGAVOLT MILESTONE 6: 24-QUERY COMPREHENSIVE RAG BENCHMARK & PROVENANCE AUDIT")
+    print(" 24-QUERY COMPREHENSIVE RAG BENCHMARK & PROVENANCE AUDIT")
     print(f" Active LLM Backend: {pipeline.llm_client._active_backend} | Target Median Latency: < 5000 ms")
     print("=" * 85)
 
@@ -276,7 +276,7 @@ def write_markdown_report(bench_data: Dict[str, Any], opt_data: Dict[str, Any], 
     a_opt = opt_data["after_optimization"]
 
     lines = [
-        "# Gigavolt Milestone 6: Performance Optimization, Benchmarking & Provenance Report",
+        "# Performance Optimization, Benchmarking & Provenance Report",
         f"\n**Generated:** {bench_data['evaluated_at']}  ",
         f"**Total Evaluation Prompts:** {bench_data['total_prompts_evaluated']} (8 Multi-Hop, 8 Temporal, 8 Technical Spec)  ",
         f"**Median End-to-End Latency (P50):** `{sp['end_to_end_total_ms']['p50']} ms` (Target: `< 5000 ms` — **PASSED**)  ",
@@ -331,7 +331,7 @@ def write_markdown_report(bench_data: Dict[str, Any], opt_data: Dict[str, Any], 
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Gigavolt Milestone 6 Benchmark & Provenance Suite")
+    parser = argparse.ArgumentParser(description="Benchmark & Provenance Suite")
     parser.add_argument("--model", type=str, default="qwen2.5:0.5b")
     parser.add_argument("--ollama-url", type=str, default="http://localhost:11434")
     parser.add_argument("--report-out", type=str, default="BENCHMARK_REPORT.md")
